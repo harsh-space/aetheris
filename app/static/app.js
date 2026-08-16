@@ -191,10 +191,10 @@ document.addEventListener("DOMContentLoaded", () => {
         btnLoadMaster.innerHTML = `<span>Loading...</span>`;
         const resp = await fetch("/demo/load-master-dataset", { method: "POST" });
         const data = await resp.json();
-        btnLoadMaster.innerHTML = `<span style="color:var(--accent-teal);">⚡ Master Loaded</span>`;
-        showToast(`⚡ <strong>Master Dataset Loaded:</strong> Ingested ${data.summary.total_ingested} packets across ${data.summary.active_sensors} sensor nodes.`);
+        btnLoadMaster.innerHTML = `<span style="color:var(--accent-teal);">Master Loaded</span>`;
+        showToast(`<strong>Master Dataset Loaded:</strong> Ingested ${data.summary.total_ingested} packets across ${data.summary.active_sensors} sensor nodes.`);
         setTimeout(() => {
-          btnLoadMaster.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> ⚡ Load Master Dataset`;
+          btnLoadMaster.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> <span>Load Master Dataset</span>`;
         }, 2500);
         await refreshDashboard();
       } catch (err) {
@@ -210,8 +210,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (isStreaming) {
         btnToggleStream.classList.add("btn-primary");
         btnToggleStream.classList.remove("btn-outline");
-        streamBtnText.textContent = "⏸ Pause Simulator";
-        showToast(`▶ <strong>Live Simulation Started:</strong> Streaming synthetic telemetry ticks...`);
+        streamBtnText.textContent = "Pause Simulator";
+        showToast(`<strong>Live Simulation Started:</strong> Streaming synthetic telemetry ticks...`);
         streamTimer = setInterval(async () => {
           try {
             const resp = await fetch("/demo/generate-stream-tick", { method: "POST" });
@@ -227,8 +227,8 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         btnToggleStream.classList.remove("btn-primary");
         btnToggleStream.classList.add("btn-outline");
-        streamBtnText.textContent = "▶ Live Simulator";
-        showToast(`⏸ Live Simulator Paused.`);
+        streamBtnText.textContent = "Live Simulator";
+        showToast(`Live Simulator Paused.`);
         if (streamTimer) clearInterval(streamTimer);
       }
     });

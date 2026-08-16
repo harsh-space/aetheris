@@ -131,14 +131,23 @@ body {
   flex-wrap: wrap;
 }
 
-.control-group {
+.control-group.resolver-control {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(30, 41, 59, 0.7);
-  padding: 6px 14px;
+  background: var(--bg-card);
+  padding: 7px 16px;
   border-radius: 9999px;
   border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.control-group.resolver-control:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  transform: translateY(-1px);
 }
 
 .control-label {
@@ -158,9 +167,14 @@ body {
   font-weight: 600;
 }
 
+.select-input:hover {
+  color: var(--accent-cyan);
+}
+
 .select-input option {
   background: var(--bg-dark);
   color: #fff;
+  padding: 8px;
 }
 
 .status-pill {
@@ -215,13 +229,17 @@ body {
   padding: 8px 18px;
 }
 
-.pill-nav-bar .btn-primary {
-  box-shadow: 0 4px 14px rgba(6, 182, 212, 0.4);
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-cyan), #2563eb);
+  color: #ffffff;
+  border: 1px solid transparent;
+  box-shadow: none; /* Removed white/bright glow */
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--glow-cyan);
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #22d3ee, #3b82f6);
+  box-shadow: 0 4px 14px rgba(6, 182, 212, 0.25);
 }
 
 .btn-outline {
