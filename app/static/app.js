@@ -454,8 +454,9 @@ document.addEventListener("DOMContentLoaded", () => {
   btnRunReplay.addEventListener("click", async () => {
     try {
       const fixtureName = selectedFixtureValue;
-      const strategyOpt = document.querySelector(".dropdown-option.active");
-      const activeStrategy = strategyOpt ? strategyOpt.getAttribute("data-value") : "source_priority";
+      // Read strategy specifically from the resolver dropdown, not generic querySelector
+      const resolverActiveOpt = document.querySelector("#custom-dropdown-menu .dropdown-option.active");
+      const activeStrategy = resolverActiveOpt ? resolverActiveOpt.getAttribute("data-value") : "source_priority";
 
       replayStatusBadge.textContent = "Simulating...";
       replayStatusBadge.className = "badge badge-purple";
