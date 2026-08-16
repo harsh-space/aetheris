@@ -234,7 +234,7 @@ The `POST /verify-integrity` endpoint traverses this chain from the genesis bloc
 | `GET` | `/sensors/{id}` | Get state for a specific sensor |
 | `GET` | `/sensors/{id}/timeline` | Get chronological event history for a sensor |
 | `GET` | `/sensors/{id}/historical?timestamp=...` | Point-in-time historical state reconstruction |
-| `POST` | `/replay` | Run temporal replay on fixtures or custom event streams |
+| `POST` | `/replay` | Run temporal replay on fixtures or custom event streams. Supports **Sandbox Mode** (isolated simulation) or **Persistent Mode** (writes to active audit ledger) |
 | `GET` | `/audit` | Query cryptographic audit trail records |
 | `POST` | `/verify-integrity` | Verify full SHA-256 hash chain from genesis block |
 | `GET` | `/analytics/correlations` | Get multi-sensor spatial cluster health & plume alerts |
@@ -335,6 +335,10 @@ Open `http://127.0.0.1:8000` to interact with the dashboard.
 Replay any offline edge-case fixture file and verify the system's order invariance:
 ```bash
 python cli.py replay --fixture 02_out_of_order_stream.json --verify
+```
+To persist the replay events directly into the database and cryptographic audit ledger:
+```bash
+python cli.py replay --fixture 02_out_of_order_stream.json --persist
 ```
 
 ---
