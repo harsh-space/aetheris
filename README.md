@@ -181,6 +181,60 @@ To maintain historical continuity under network jitter, Aetheris splits the hand
    - If the inserted packet is historical, Aetheris triggers a retrospective state reconstruction.
    - It recomputes the historical state sequence and verifies that the chronological chain of events remains coherent.
 
+3. **PRD Edge-Case Verification Fixture Suite**
+   Aetheris includes 7 pre-packaged JSON telemetry fixtures in `fixtures/` mapping directly to operational PRD scenarios:
+
+   <div align="center">
+
+   <table width="100%" style="text-align: center; border-collapse: collapse;">
+     <thead>
+       <tr style="border-bottom: 2px solid #ccc; background-color: rgba(255, 255, 255, 0.03);">
+         <th style="padding: 10px;">Fixture File</th>
+         <th style="padding: 10px;">PRD Scenario & Subsystem</th>
+         <th style="padding: 10px;">Verification Objective</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr style="border-bottom: 1px solid #ddd;">
+         <td style="padding: 10px;"><code>00_master_fleet_simulation.json</code></td>
+         <td style="padding: 10px;">Master Fleet Simulation</td>
+         <td style="padding: 10px;">8-sensor multi-catchment simulation validating all engine features concurrently.</td>
+       </tr>
+       <tr style="border-bottom: 1px solid #ddd;">
+         <td style="padding: 10px;"><code>01_duplicate_packet_storm.json</code></td>
+         <td style="padding: 10px;">Idempotent Ingestion</td>
+         <td style="padding: 10px;">Rejects duplicate packet bursts via SHA-256 fingerprinting without state drift.</td>
+       </tr>
+       <tr style="border-bottom: 1px solid #ddd;">
+         <td style="padding: 10px;"><code>02_out_of_order_stream.json</code></td>
+         <td style="padding: 10px;">Bi-Temporal Reconstruction</td>
+         <td style="padding: 10px;">Binary search timeline insertion (<code>bisect_right</code>) & retrospective state reconstruction.</td>
+       </tr>
+       <tr style="border-bottom: 1px solid #ddd;">
+         <td style="padding: 10px;"><code>03_conflicting_sources.json</code></td>
+         <td style="padding: 10px;">Multi-Source Resolution</td>
+         <td style="padding: 10px;">Strategy matrix evaluation (<code>Lab > Field > Backup</code>) on overlapping timestamps.</td>
+       </tr>
+       <tr style="border-bottom: 1px solid #ddd;">
+         <td style="padding: 10px;"><code>04_partial_reading_merges.json</code></td>
+         <td style="padding: 10px;">Partial Metric Fusion</td>
+         <td style="padding: 10px;">Selective metric fusion (e.g., pH-only + turbidity-only) without metric data loss.</td>
+       </tr>
+       <tr style="border-bottom: 1px solid #ddd;">
+         <td style="padding: 10px;"><code>05_drift_vs_spike_correlation.json</code></td>
+         <td style="padding: 10px;">Spatial Topology Corroboration</td>
+         <td style="padding: 10px;">Differentiates single electrode CUSUM drift from systemic catchment contamination plumes.</td>
+       </tr>
+       <tr style="border-bottom: 1px solid #ddd;">
+         <td style="padding: 10px;"><code>06_midnight_boundary_transition.json</code></td>
+         <td style="padding: 10px;">UTC Boundary Continuity</td>
+         <td style="padding: 10px;">Chronological re-ordering across <code>23:59:59Z</code> &rarr; <code>00:00:01Z</code> day transition boundary.</td>
+       </tr>
+     </tbody>
+   </table>
+
+   </div>
+
 ---
 
 ## Cryptographic Audit Ledger & Database Schema
