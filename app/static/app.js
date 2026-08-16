@@ -470,12 +470,28 @@ document.addEventListener("DOMContentLoaded", () => {
     ingestResponseContainer.innerHTML = html;
   }
 
+  // Persist Toggle Listener
+  const replayPersistToggle = document.getElementById("replay-persist-toggle");
+  const persistModeHint = document.getElementById("persist-mode-hint");
+  if (replayPersistToggle && persistModeHint) {
+    replayPersistToggle.addEventListener("change", () => {
+      if (replayPersistToggle.checked) {
+        persistModeHint.textContent = "Live mode — events recorded to audit ledger DB";
+        persistModeHint.style.color = "var(--accent-teal)";
+      } else {
+        persistModeHint.textContent = "Sandbox mode — no ledger writes";
+        persistModeHint.style.color = "var(--text-dim)";
+      }
+    });
+  }
+
   // Run Replay Simulation
   btnRunReplay.addEventListener("click", async () => {
     try {
       const fixtureName = selectedFixtureValue;
       const strategyOpt = document.querySelector("#custom-dropdown-menu .dropdown-option.active");
       const activeStrategy = strategyOpt ? strategyOpt.getAttribute("data-value") : "source_priority";
+      const shouldPersist = replayPersistToggle ? replayPersistToggle.checked : false;
 
       replayStatusBadge.textContent = "Simulating...";
       replayStatusBadge.className = "badge badge-purple";
@@ -487,7 +503,8 @@ document.addEventListener("DOMContentLoaded", () => {
           fixture_name: fixtureName,
           strategy: activeStrategy,
           shuffle: false,
-          verify_invariance: true
+          verify_invariance: true,
+          persist: shouldPersist
         })
       });
       const data = await resp.json();
@@ -496,8 +513,14 @@ document.addEventListener("DOMContentLoaded", () => {
       replayStatusBadge.className = "badge badge-teal";
 
       renderReplayResults(data);
-      showToast(`Replay simulation completed for <strong>${fixtureName}</strong>.`);
+      showToast(`Replay simulation completed for <strong>${fixtureName}</strong>.${shouldPersist ? " (Persisted to Audit Ledger)" : ""}`);
       await refreshDashboard();
+      if (shouldPersist) {
+        const activeTab = document.querySelector(".tab-btn.active");
+        if (activeTab && activeTab.getAttribute("data-tab") === "tab-audit") {
+          await loadAuditTrail();
+        }
+      }
     } catch (err) {
       replayStatusBadge.textContent = "Failed";
       replayStatusBadge.className = "badge badge-rose";
@@ -576,8 +599,9 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </div>
 
-      <div style="margin-bottom: 12px;">
-        <strong>Simulation Execution Duration:</strong> <span class="mono-badge">${sum.execution_time_ms} ms</span>
+      <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <div><strong>Simulation Execution Duration:</strong> <span class="mono-badge">${sum.execution_time_ms} ms</span></div>
+        ${data.persisted_to_ledger ? '<span class="badge badge-teal">&#10004; Persisted to Audit Ledger</span>' : '<span class="badge badge-amber">Sandbox Mode (Not Persisted)</span>'}
       </div>
 
       ${inv ? `

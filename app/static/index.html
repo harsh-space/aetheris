@@ -10,7 +10,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css?v=20">
+  <link rel="stylesheet" href="/static/style.css?v=21">
 </head>
 
 <body>
@@ -309,7 +309,22 @@
                 <button id="btn-load-all-fixtures" class="btn btn-outline">
                   Run Full Battery (All 6 Fixtures)
                 </button>
+
+                <!-- Persist to Ledger Toggle -->
+                <label class="persist-toggle-label" id="persist-toggle-wrapper" title="When ON: replay events are written to the main audit ledger (same DB as live ingest). When OFF: isolated sandbox only.">
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="replay-persist-toggle">
+                    <span class="toggle-track">
+                      <span class="toggle-thumb"></span>
+                    </span>
+                  </div>
+                  <div class="persist-label-text">
+                    <span class="persist-label-title">Persist to Audit Ledger</span>
+                    <span class="persist-label-sub" id="persist-mode-hint">Sandbox mode — no ledger writes</span>
+                  </div>
+                </label>
               </div>
+
             </div>
           </div>
 
@@ -453,7 +468,7 @@
     <div id="toast-container" class="toast-container"></div>
   </div>
 
-  <script src="/static/app.js?v=20"></script>
+  <script src="/static/app.js?v=21"></script>
 </body>
 
 </html>

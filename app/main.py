@@ -66,6 +66,7 @@ class ReplayRequest(BaseModel):
     strategy: Optional[str] = Field(default="source_priority")
     shuffle: bool = Field(default=False, description="Shuffle event stream before replay")
     verify_invariance: bool = Field(default=False, description="Run multi-permutation order invariance verification")
+    persist: bool = Field(default=False, description="If True, ingests replay events into the main shared processor/audit ledger instead of an isolated sandbox.")
 
 
 # API Endpoints
@@ -161,11 +162,58 @@ def execute_replay(req: ReplayRequest):
         raise HTTPException(status_code=400, detail="Must provide either 'fixture_name' or 'events' list.")
 
     strat = req.strategy or processor.resolver.__class__.__name__
-    _, replay_res = replay_engine.replay_stream(
-        events=events,
-        strategy_name=strat,
-        shuffle=req.shuffle
-    )
+
+    if req.persist:
+        # Persist mode: replay through the shared global processor so events
+        # appear in the main audit ledger (same DB as live ingest).
+        import random
+        import time
+        event_list = list(events)
+        if req.shuffle:
+            rng = random.Random(42)
+            rng.shuffle(event_list)
+
+        start_time = time.perf_counter()
+        duplicates_count = 0
+        out_of_order_count = 0
+        anomalies_count = 0
+        unique_processed = 0
+
+        for event in event_list:
+            state, anom, trace, audit_rec, is_dup, is_ooo = processor.process_event(event)
+            if is_dup:
+                duplicates_count += 1
+            else:
+                unique_processed += 1
+                if is_ooo:
+                    out_of_order_count += 1
+                if anom.is_anomaly:
+                    anomalies_count += 1
+
+        exec_duration_ms = (time.perf_counter() - start_time) * 1000.0
+        ledger_valid, _ = processor.verify_ledger()
+        all_states = processor.get_all_states()
+        serialized_states = {s_id: s.model_dump() for s_id, s in all_states.items()}
+
+        from engine.models import ReplayResult
+        replay_res = ReplayResult(
+            total_events_ingested=len(event_list),
+            unique_events_processed=unique_processed,
+            duplicates_filtered=duplicates_count,
+            out_of_order_reordered=out_of_order_count,
+            anomalies_detected=anomalies_count,
+            final_sensor_count=len(all_states),
+            audit_ledger_valid=ledger_valid,
+            execution_time_ms=round(exec_duration_ms, 2),
+            sensor_states=serialized_states
+        )
+    else:
+        # Sandbox mode (default): isolated processor, no ledger writes
+        _, replay_res = replay_engine.replay_stream(
+            events=events,
+            strategy_name=strat,
+            shuffle=req.shuffle
+        )
 
     invariance_report = None
     if req.verify_invariance:
@@ -178,7 +226,8 @@ def execute_replay(req: ReplayRequest):
 
     return {
         "replay_summary": replay_res.model_dump(),
-        "invariance_report": invariance_report
+        "invariance_report": invariance_report,
+        "persisted_to_ledger": req.persist
     }
 
 
