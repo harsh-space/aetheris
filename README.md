@@ -88,46 +88,13 @@ The Aetheris engine is structured as a decoupled four-layer pipeline to ensure s
 
 </div>
 
-```
-+-----------------------------------------------------------------------------------+
-|                            IoT Telemetry Source Fleet                             |
-|       (WQ-S101, WQ-S102... [Field / Backup / Lab] with Network Jitter & Drops)    |
-+------------------------------------------+----------------------------------------+
-                                           | POST /events (JSON)
-                                           v
-+-----------------------------------------------------------------------------------+
-|                               Ingestion & Deduplication Layer                     |
-|  - Idempotency Hash (SHA-256 fingerprint of sensor_id + event_time + payload)     |
-|  - Deduplication Cache & Storage Filter (Zero state drift on duplicate ingestion) |
-+------------------------------------------+----------------------------------------+
-                                           |
-                                           v
-+-----------------------------------------------------------------------------------+
-|                        State Reconstruction & Identity Resolution                 |
-|  - Bi-Temporal State Timeline per Sensor (Ordered by event_time)                  |
-|  - Out-of-order Insertion & Historical State Recomputation                        |
-|  - Partial Reading Merge Matrix (Selective field fusion without data loss)        |
-|  - Multi-Source Conflict Resolution (Configurable: Confidence/Quality-Weighted,   |
-|    Source Hierarchy [Lab > Field > Backup], Time-decayed confidence)              |
-+------------------------------------------+----------------------------------------+
-                                           |
-                                           v
-+-----------------------------------------------------------------------------------+
-|                   Deterministic Anomaly & Drift Engine (NumPy / Pandas)           |
-|  - Temporal Rate-of-Change Monitor (ΔpH/Δt, Thermal Shock Trigger)                |
-|  - Multivariate Covariance / Mahalanobis Distance Metric                          |
-|  - CUSUM Cumulative Sum Drift Detector (Electrode degradation / slow drift)       |
-|  - Multi-Sensor Spatial Corroborator (Systemic Plume vs Local Sensor Failure)     |
-+------------------------------------------+----------------------------------------+
-                                           |
-                                           v
-+-----------------------------------------------------------------------------------+
-|                      Immutable Audit Ledger & Replay Engine                       |
-|  - Hash-Chained Audit Trail (SHA-256 prev_hash -> current_hash)                   |
-|  - Full Explainability Trace (Weights, anomaly scores, conflict decisions)        |
-|  - Temporal Replay Engine (Replays shuffled/chronological streams & verifies)    |
-+------------------------------------------+----------------------------------------+
-```
+<div align="center">
+
+![Aetheris Engine Architecture Diagram](docs/architecture.png)
+
+<p style="margin-top: 8px;"><b>Figure 1. Four-layer data pipeline: Ingestion → State Resolution → ML Analytics → Audit & Replay.</b></p>
+
+</div>
 
 ---
 
