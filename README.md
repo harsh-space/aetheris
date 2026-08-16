@@ -333,26 +333,30 @@ Aetheris classifies sensor metrics into four distinct warning levels based on a 
 
 ## Setup & Execution
 
-### 1. Installation
-Ensure Python 3.10+ is installed. Clone the repository and install the standard dependencies:
+### 1. Prerequisites
+Ensure **Python 3.10+** is installed (tested on Python 3.13).
+
+### 2. Clone & Install
 ```bash
-pip install numpy pandas fastapi uvicorn pydantic
+git clone https://github.com/harsh-space/aetheris.git
+cd aetheris
+pip install -r requirements.txt
 ```
 
-### 2. Run the Verification Tests
+### 3. Run the Verification Tests
 Execute the full test battery covering OOO streams, deduplication, conflict strategies, and ledger verification:
 ```bash
 python -m unittest discover tests
 ```
 
-### 3. Launch the Server
+### 4. Launch the Server
 Start the local FastAPI instance:
 ```bash
 python cli.py server --port 8000
 ```
 Open `http://127.0.0.1:8000` to interact with the dashboard.
 
-### 4. Deterministic Replay CLI
+### 5. Deterministic Replay CLI
 Replay any offline edge-case fixture file and verify the system's order invariance:
 ```bash
 python cli.py replay --fixture 02_out_of_order_stream.json --verify
@@ -360,6 +364,12 @@ python cli.py replay --fixture 02_out_of_order_stream.json --verify
 To persist the replay events directly into the database and cryptographic audit ledger:
 ```bash
 python cli.py replay --fixture 02_out_of_order_stream.json --persist
+```
+
+### 6. Audit Ledger Verification
+Verify the full SHA-256 cryptographic chain from the CLI:
+```bash
+python cli.py audit-verify
 ```
 
 ---
