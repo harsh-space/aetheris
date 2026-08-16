@@ -7,6 +7,7 @@ and inspect fleet states from the terminal.
 import argparse
 import json
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from engine.models import TelemetryEvent
@@ -62,22 +63,58 @@ def cmd_replay(args):
         raw_events = json.load(f)
         events = [TelemetryEvent(**item) for item in raw_events]
 
-    replay_engine = ReplayEngine(strategy_name=args.strategy)
-    _, result = replay_engine.replay_stream(events, strategy_name=args.strategy, shuffle=args.shuffle)
+    if args.persist:
+        processor = get_default_processor()
+        start_time = time.perf_counter()
+        duplicates_count = 0
+        out_of_order_count = 0
+        anomalies_count = 0
+        unique_processed = 0
 
-    print("=" * 60)
-    print(f" AETHERIS TEMPORAL REPLAY SIMULATION: {fixture_path.name}")
-    print("=" * 60)
-    print(f"Total Ingested:        {result.total_events_ingested}")
-    print(f"Unique Processed:      {result.unique_events_processed}")
-    print(f"Duplicates Filtered:   {result.duplicates_filtered}")
-    print(f"Out-of-Order Handled:  {result.out_of_order_reordered}")
-    print(f"Anomalies Flagged:     {result.anomalies_detected}")
-    print(f"Execution Duration:    {result.execution_time_ms} ms")
-    print(f"Audit Chain Intact:    {result.audit_ledger_valid}")
-    print("=" * 60)
+        for event in events:
+            state, anom, trace, audit_rec, is_dup, is_ooo = processor.process_event(event)
+            if is_dup:
+                duplicates_count += 1
+            else:
+                unique_processed += 1
+                if is_ooo:
+                    out_of_order_count += 1
+                if anom.is_anomaly:
+                    anomalies_count += 1
+
+        exec_duration_ms = (time.perf_counter() - start_time) * 1000.0
+        ledger_valid, _ = processor.verify_ledger()
+        all_states = processor.get_all_states()
+
+        print("=" * 60)
+        print(f" AETHERIS TEMPORAL REPLAY (PERSISTED): {fixture_path.name}")
+        print("=" * 60)
+        print(f"Total Ingested:        {len(events)}")
+        print(f"Unique Processed:      {unique_processed}")
+        print(f"Duplicates Filtered:   {duplicates_count}")
+        print(f"Out-of-Order Handled:  {out_of_order_count}")
+        print(f"Anomalies Flagged:     {anomalies_count}")
+        print(f"Execution Duration:    {round(exec_duration_ms, 2)} ms")
+        print(f"Audit Chain Intact:    {ledger_valid}")
+        print("=" * 60)
+    else:
+        replay_engine = ReplayEngine(strategy_name=args.strategy)
+        _, result = replay_engine.replay_stream(events, strategy_name=args.strategy, shuffle=args.shuffle)
+
+        print("=" * 60)
+        print(f" AETHERIS TEMPORAL REPLAY SIMULATION: {fixture_path.name}")
+        print("=" * 60)
+        print(f"Total Ingested:        {result.total_events_ingested}")
+        print(f"Unique Processed:      {result.unique_events_processed}")
+        print(f"Duplicates Filtered:   {result.duplicates_filtered}")
+        print(f"Out-of-Order Handled:  {result.out_of_order_reordered}")
+        print(f"Anomalies Flagged:     {result.anomalies_detected}")
+        print(f"Execution Duration:    {result.execution_time_ms} ms")
+        print(f"Audit Chain Intact:    {result.audit_ledger_valid}")
+        print("=" * 60)
 
     if args.verify:
+        replay_engine = ReplayEngine(strategy_name=args.strategy)
         print("\nRunning 5-permutation random order invariance test...")
         is_inv, msg, details = replay_engine.verify_order_invariance(events, permutations=5)
         print(f"Result: {'[PASSED] ' + msg if is_inv else '[FAILED] ' + msg}")
@@ -123,6 +160,7 @@ def main():
     p_replay.add_argument("--strategy", default="source_priority", help="Conflict strategy")
     p_replay.add_argument("--shuffle", action="store_true", help="Shuffle event stream before replay")
     p_replay.add_argument("--verify", action="store_true", help="Run multi-permutation order invariance verification")
+    p_replay.add_argument("--persist", action="store_true", help="Ingest replay events into active audit ledger database")
     p_replay.set_defaults(func=cmd_replay)
 
     # Verify Audit
