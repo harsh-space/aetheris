@@ -28,7 +28,7 @@ class AuditLedger:
         self._init_db()
 
     def _init_db(self) -> None:
-        """Initializes the SQLite schema for persistent immutable ledger storage."""
+        """Initializes the SQLite schema for persistent immutable ledger storage and loads records."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -50,6 +50,33 @@ class AuditLedger:
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_audit_sensor ON audit_trail(sensor_id);")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_audit_ts ON audit_trail(event_timestamp);")
             conn.commit()
+
+            # Load existing records if any
+            cursor.execute("SELECT * FROM audit_trail ORDER BY audit_id ASC;")
+            rows = cursor.fetchall()
+            for row in rows:
+                (
+                    a_id, prev_h, curr_h, act, s_id,
+                    ev_ts, rec_ts, fp,
+                    raw_ev_json, trace_json, anom_json, state_json
+                ) = row
+                
+                rec = AuditRecord(
+                    audit_id=a_id,
+                    prev_hash=prev_h,
+                    current_hash=curr_h,
+                    action=act,
+                    sensor_id=s_id,
+                    event_timestamp=ev_ts,
+                    received_timestamp=rec_ts,
+                    event_fingerprint=fp,
+                    raw_event=json.loads(raw_ev_json),
+                    conflict_trace=json.loads(trace_json) if trace_json else None,
+                    anomaly_report=json.loads(anom_json) if anom_json else None,
+                    resulting_state=json.loads(state_json)
+                )
+                self.records.append(rec)
+                self._latest_hash = curr_h
 
     @staticmethod
     def calculate_record_hash(prev_hash: str, body_dict: Dict[str, Any]) -> str:
