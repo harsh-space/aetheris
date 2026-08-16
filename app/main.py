@@ -249,6 +249,85 @@ def configure_strategy(req: StrategyConfigRequest):
     }
 
 
+@app.post("/demo/load-master-dataset", tags=["Demo & Datasets"])
+def load_master_dataset():
+    """Loads the comprehensive multi-sensor master dataset covering all PRD edge cases."""
+    fixture_path = Path("fixtures/00_master_fleet_simulation.json")
+    if not fixture_path.exists():
+        raise HTTPException(status_code=404, detail="Master dataset fixture not found.")
+    
+    with open(fixture_path, "r", encoding="utf-8") as f:
+        events_data = json.load(f)
+    
+    ingest_count = 0
+    dup_count = 0
+    ooo_count = 0
+    anom_count = 0
+
+    for item in events_data:
+        ev = TelemetryEvent(**item)
+        state, anom, trace, audit_rec, is_dup, is_ooo = processor.process_event(ev)
+        ingest_count += 1
+        if is_dup: dup_count += 1
+        if is_ooo: ooo_count += 1
+        if anom.is_anomaly: anom_count += 1
+
+    return {
+        "status": "SUCCESS",
+        "message": f"Loaded {ingest_count} telemetry packets across 8 fleet sensor nodes.",
+        "summary": {
+            "total_ingested": ingest_count,
+            "duplicates_filtered": dup_count,
+            "out_of_order_reordered": ooo_count,
+            "anomalies_detected": anom_count,
+            "active_sensors": len(processor.get_all_states()),
+            "audit_blocks": processor.audit_ledger.get_record_count()
+        }
+    }
+
+
+@app.post("/demo/generate-stream-tick", tags=["Demo & Datasets"])
+def generate_stream_tick():
+    """Generates a dynamic real-time telemetry tick across a random active sensor node."""
+    import random
+    from datetime import datetime, timezone
+    
+    sensors = ["WQ-S101", "WQ-S102", "WQ-S103", "WQ-S123", "WQ-S201", "WQ-S202", "WQ-IND01"]
+    sensor_id = random.choice(sensors)
+    now_iso = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    # 10% chance of random anomaly
+    if random.random() < 0.12:
+        readings = {
+            "pH": round(random.uniform(3.5, 5.2), 2),
+            "turbidity": round(random.uniform(45.0, 110.0), 1),
+            "conductivity": round(random.uniform(900.0, 1800.0), 1),
+            "temperature": round(random.uniform(22.0, 29.0), 1)
+        }
+    else:
+        readings = {
+            "pH": round(random.uniform(7.15, 7.55), 2),
+            "turbidity": round(random.uniform(1.8, 3.2), 2),
+            "conductivity": round(random.uniform(410.0, 440.0), 1),
+            "temperature": round(random.uniform(19.5, 21.8), 1)
+        }
+
+    ev = TelemetryEvent(
+        sensor_id=sensor_id,
+        timestamp=now_iso,
+        readings=readings,
+        source="field"
+    )
+    state, anom, trace, audit_rec, is_dup, is_ooo = processor.process_event(ev)
+    return {
+        "sensor_id": sensor_id,
+        "timestamp": now_iso,
+        "is_anomaly": anom.is_anomaly,
+        "anomaly_type": anom.anomaly_type.value,
+        "readings": state.readings
+    }
+
+
 @app.post("/reset", tags=["System Configuration"])
 def reset_system():
     """Resets all engine state and audit records for fresh testing."""

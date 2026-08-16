@@ -1,0 +1,170 @@
+[
+  {
+    "sensor_id": "WQ-S101",
+    "timestamp": "2024-06-15T08:00:00Z",
+    "readings": {"pH": 7.35, "turbidity": 2.1, "conductivity": 420.0, "temperature": 20.5},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S102",
+    "timestamp": "2024-06-15T08:00:00Z",
+    "readings": {"pH": 7.30, "turbidity": 2.2, "conductivity": 425.0, "temperature": 20.4},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S103",
+    "timestamp": "2024-06-15T08:00:00Z",
+    "readings": {"pH": 7.28, "turbidity": 2.0, "conductivity": 418.0, "temperature": 20.6},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S123",
+    "timestamp": "2024-06-15T08:00:00Z",
+    "readings": {"pH": 7.32, "turbidity": 2.3, "conductivity": 430.0, "temperature": 21.0},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S201",
+    "timestamp": "2024-06-15T08:00:00Z",
+    "readings": {"pH": 7.40, "turbidity": 1.9, "conductivity": 410.0, "temperature": 19.8},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S202",
+    "timestamp": "2024-06-15T08:00:00Z",
+    "readings": {"pH": 7.38, "turbidity": 1.8, "conductivity": 412.0, "temperature": 19.9},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S203",
+    "timestamp": "2024-06-15T08:00:00Z",
+    "readings": {"pH": 7.41, "turbidity": 2.0, "conductivity": 415.0, "temperature": 19.7},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-IND01",
+    "timestamp": "2024-06-15T08:00:00Z",
+    "readings": {"pH": 7.15, "turbidity": 3.4, "conductivity": 480.0, "temperature": 22.0},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-IND02",
+    "timestamp": "2024-06-15T08:00:00Z",
+    "readings": {"pH": 7.18, "turbidity": 3.2, "conductivity": 475.0, "temperature": 22.1},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S123",
+    "timestamp": "2024-06-15T08:00:00Z",
+    "readings": {"pH": 7.32, "turbidity": 2.3, "conductivity": 430.0, "temperature": 21.0},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S123",
+    "timestamp": "2024-06-15T08:00:00Z",
+    "readings": {"pH": 7.32, "turbidity": 2.3, "conductivity": 430.0, "temperature": 21.0},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S101",
+    "timestamp": "2024-06-15T08:30:00Z",
+    "readings": {"pH": 7.38, "temperature": 20.8},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S101",
+    "timestamp": "2024-06-15T08:31:00Z",
+    "readings": {"turbidity": 2.4, "conductivity": 422.0},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S102",
+    "timestamp": "2024-06-15T08:30:00Z",
+    "readings": {"pH": 7.25, "turbidity": 3.1, "conductivity": 440.0, "temperature": 20.5},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S102",
+    "timestamp": "2024-06-15T08:30:00Z",
+    "readings": {"pH": 7.42, "turbidity": 2.1, "conductivity": 418.0, "temperature": 20.5},
+    "source": "lab"
+  },
+  {
+    "sensor_id": "WQ-S103",
+    "timestamp": "2024-06-15T08:45:00Z",
+    "readings": {"pH": 7.31, "turbidity": 2.1, "conductivity": 420.0, "temperature": 20.7},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S103",
+    "timestamp": "2024-06-15T08:20:00Z",
+    "readings": {"pH": 7.29, "turbidity": 2.05, "conductivity": 419.0, "temperature": 20.6},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S201",
+    "timestamp": "2024-06-15T08:30:00Z",
+    "readings": {"pH": 7.40, "turbidity": 1.9, "conductivity": 560.0, "temperature": 19.8},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S201",
+    "timestamp": "2024-06-15T09:00:00Z",
+    "readings": {"pH": 7.39, "turbidity": 1.9, "conductivity": 710.0, "temperature": 19.9},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S201",
+    "timestamp": "2024-06-15T09:30:00Z",
+    "readings": {"pH": 7.41, "turbidity": 2.0, "conductivity": 890.0, "temperature": 19.9},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S201",
+    "timestamp": "2024-06-15T10:00:00Z",
+    "readings": {"pH": 7.40, "turbidity": 2.0, "conductivity": 1080.0, "temperature": 20.0},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S101",
+    "timestamp": "2024-06-15T10:00:00Z",
+    "readings": {"pH": 4.10, "turbidity": 85.0, "conductivity": 1350.0, "temperature": 21.0},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S102",
+    "timestamp": "2024-06-15T10:02:00Z",
+    "readings": {"pH": 4.25, "turbidity": 79.0, "conductivity": 1280.0, "temperature": 21.1},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S103",
+    "timestamp": "2024-06-15T10:05:00Z",
+    "readings": {"pH": 4.30, "turbidity": 72.0, "conductivity": 1220.0, "temperature": 21.2},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-IND01",
+    "timestamp": "2024-06-15T10:30:00Z",
+    "readings": {"pH": 7.20, "turbidity": 3.0, "conductivity": 490.0, "temperature": 21.8},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-IND01",
+    "timestamp": "2024-06-15T10:33:00Z",
+    "readings": {"pH": 6.30, "turbidity": 3.8, "conductivity": 510.0, "temperature": 27.5},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S202",
+    "timestamp": "2024-06-15T23:59:50Z",
+    "readings": {"pH": 7.35, "turbidity": 1.9, "conductivity": 415.0, "temperature": 18.5},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S202",
+    "timestamp": "2024-06-16T00:00:10Z",
+    "readings": {"pH": 7.36, "turbidity": 1.9, "conductivity": 415.5, "temperature": 18.5},
+    "source": "field"
+  }
+]

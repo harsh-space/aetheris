@@ -5,6 +5,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentSensors = {};
   let selectedSensorId = null;
   let selectedSensorTimeline = [];
+  let isStreaming = false;
+  let streamTimer = null;
 
   // DOM Elements
   const tabBtns = document.querySelectorAll(".tab-btn");
@@ -14,6 +16,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnVerifyAuditPane = document.getElementById("btn-verify-audit-pane");
   const btnExportCsv = document.getElementById("btn-export-csv");
   const btnResetEngine = document.getElementById("btn-reset-engine");
+  const btnLoadMaster = document.getElementById("btn-load-master");
+  const btnToggleStream = document.getElementById("btn-toggle-stream");
+  const streamBtnText = document.getElementById("stream-btn-text");
 
   // KPI elements
   const kpiSensorsCount = document.getElementById("kpi-sensors-count");
@@ -131,6 +136,47 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedSensorId = null;
   });
 
+  // Load Master Dataset
+  if (btnLoadMaster) {
+    btnLoadMaster.addEventListener("click", async () => {
+      try {
+        btnLoadMaster.textContent = "Loading...";
+        const resp = await fetch("/demo/load-master-dataset", { method: "POST" });
+        const data = await resp.json();
+        btnLoadMaster.textContent = "⚡ Master Loaded";
+        setTimeout(() => { btnLoadMaster.textContent = "⚡ Load Master Dataset"; }, 2000);
+        await refreshDashboard();
+      } catch (err) {
+        console.error("Master dataset load error:", err);
+      }
+    });
+  }
+
+  // Toggle Live Simulator Stream
+  if (btnToggleStream) {
+    btnToggleStream.addEventListener("click", () => {
+      isStreaming = !isStreaming;
+      if (isStreaming) {
+        btnToggleStream.classList.add("btn-primary");
+        btnToggleStream.classList.remove("btn-outline");
+        streamBtnText.textContent = "⏸ Pause Simulator";
+        streamTimer = setInterval(async () => {
+          try {
+            await fetch("/demo/generate-stream-tick", { method: "POST" });
+            await refreshDashboard();
+          } catch (e) {
+            console.error("Stream tick error:", e);
+          }
+        }, 1200);
+      } else {
+        btnToggleStream.classList.remove("btn-primary");
+        btnToggleStream.classList.add("btn-outline");
+        streamBtnText.textContent = "▶ Live Simulator";
+        if (streamTimer) clearInterval(streamTimer);
+      }
+    });
+  }
+
   // Strategy change
   strategySelector.addEventListener("change", async (e) => {
     try {
@@ -140,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ strategy: e.target.value })
       });
       if (resp.ok) {
-        refreshDashboard();
+        await refreshDashboard();
       }
     } catch (err) {
       console.error("Strategy update failed:", err);
@@ -152,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (confirm("Reset all telemetry state, deduplication caches, and audit logs?")) {
       try {
         await fetch("/reset", { method: "POST" });
-        refreshDashboard();
+        await refreshDashboard();
       } catch (err) {
         console.error("Reset failed:", err);
       }
@@ -629,7 +675,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Periodic polling every 3 seconds
-  setInterval(refreshDashboard, 3000);
+  // Periodic fast polling every 800ms for instant real-time responsiveness
+  setInterval(refreshDashboard, 800);
   refreshDashboard();
 });

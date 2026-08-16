@@ -40,14 +40,24 @@
           </select>
         </div>
 
+        <button id="btn-load-master" class="btn btn-primary" title="Load comprehensive dataset covering all 6 PRD scenarios">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          ⚡ Load Master Dataset
+        </button>
+
+        <button id="btn-toggle-stream" class="btn btn-outline" title="Toggle automatic live telemetry stream generator">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <span id="stream-btn-text">▶ Live Simulator</span>
+        </button>
+
         <button id="btn-verify-audit" class="btn btn-outline" title="Verify SHA-256 Blockchain Audit Trail">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
           Verify Audit Chain
         </button>
 
         <button id="btn-export-csv" class="btn btn-outline" title="Export current sensor states to CSV">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Export CSV
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          CSV
         </button>
 
         <button id="btn-reset-engine" class="btn btn-danger-outline" title="Reset all telemetry and audit logs">
@@ -181,6 +191,7 @@
               <div class="form-group">
                 <label for="replay-fixture-select">Select Edge-Case Fixture:</label>
                 <select id="replay-fixture-select" class="select-input">
+                  <option value="00_master_fleet_simulation.json">⭐ 00. Master Fleet Simulation (All 6 PRD Scenarios Combined)</option>
                   <option value="01_duplicate_packet_storm.json">01. Duplicate Packet Storm (Idempotency)</option>
                   <option value="02_out_of_order_stream.json">02. Out-of-Order Stream (Bi-Temporal Ordering)</option>
                   <option value="03_conflicting_sources.json">03. Conflicting Sources (Identity Resolution)</option>
