@@ -337,31 +337,60 @@ def reset_system():
 
 @app.get("/export/csv", tags=["Data Export"])
 def export_csv():
-    """Exports current fleet sensor states to downloadable CSV."""
+    """Exports complete historical telemetry and audit event logs to downloadable CSV."""
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["sensor_id", "last_event_time", "pH", "turbidity", "conductivity", "temperature", "is_anomalous", "anomaly_type", "version", "last_source"])
+    writer.writerow([
+        "audit_id",
+        "action",
+        "sensor_id",
+        "event_timestamp",
+        "received_timestamp",
+        "pH",
+        "turbidity",
+        "conductivity",
+        "temperature",
+        "source",
+        "is_anomaly",
+        "anomaly_type",
+        "anomaly_score",
+        "conflict_strategy",
+        "current_hash",
+        "prev_hash"
+    ])
     
-    for s_id, s in processor.get_all_states().items():
-        r = s.readings
+    # Export full audit ledger history
+    records = processor.audit_ledger.get_records(limit=100000)
+    for r in records:
+        ev = r.raw_event or {}
+        readings = ev.get("readings", {})
+        anom = r.anomaly_report or AnomalyReport()
+        trace = r.conflict_trace or ConflictDecisionTrace(strategy_used="N/A")
+        
         writer.writerow([
-            s.sensor_id,
-            s.last_event_time,
-            r.get("pH", ""),
-            r.get("turbidity", ""),
-            r.get("conductivity", ""),
-            r.get("temperature", ""),
-            s.is_anomalous,
-            s.active_anomaly_type.value,
-            s.version,
-            s.last_source
+            r.audit_id,
+            r.action,
+            r.sensor_id,
+            r.event_timestamp,
+            r.received_timestamp,
+            readings.get("pH", ""),
+            readings.get("turbidity", ""),
+            readings.get("conductivity", ""),
+            readings.get("temperature", ""),
+            ev.get("source", "field"),
+            anom.is_anomaly,
+            anom.anomaly_type.value if hasattr(anom.anomaly_type, "value") else str(anom.anomaly_type),
+            anom.anomaly_score,
+            trace.strategy_used,
+            r.current_hash,
+            r.prev_hash
         ])
     
     output.seek(0)
     return StreamingResponse(
         iter([output.getvalue()]),
         media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=iot_water_quality_state.csv"}
+        headers={"Content-Disposition": "attachment; filename=aetheris_telemetry_audit_history.csv"}
     )
 
 
