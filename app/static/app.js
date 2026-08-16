@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedSensorTimeline = [];
   let isStreaming = false;
   let streamTimer = null;
+  let activeFilter = "all";
+  let searchQuery = "";
 
   // DOM Elements
   const tabBtns = document.querySelectorAll(".tab-btn");
@@ -19,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnLoadMaster = document.getElementById("btn-load-master");
   const btnToggleStream = document.getElementById("btn-toggle-stream");
   const streamBtnText = document.getElementById("stream-btn-text");
+  const toastContainer = document.getElementById("toast-container");
 
   // KPI elements
   const kpiSensorsCount = document.getElementById("kpi-sensors-count");
@@ -31,6 +34,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Fleet View elements
   const sensorFleetGrid = document.getElementById("sensor-fleet-grid");
+  const sensorSearchInput = document.getElementById("sensor-search-input");
+  const filterPills = document.querySelectorAll(".filter-pill");
   const sensorDetailCard = document.getElementById("sensor-detail-card");
   const detailSensorTitle = document.getElementById("detail-sensor-title");
   const detailSensorCluster = document.getElementById("detail-sensor-cluster");
@@ -59,6 +64,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const spatialClusterGrid = document.getElementById("spatial-cluster-grid");
   const auditTableBody = document.getElementById("audit-table-body");
   const auditVerifyAlert = document.getElementById("audit-verify-alert");
+
+  // Cluster Mapping
+  const CLUSTER_MAP = {
+    "WQ-S101": "cluster_basin_north",
+    "WQ-S102": "cluster_basin_north",
+    "WQ-S103": "cluster_basin_north",
+    "WQ-S123": "cluster_basin_north",
+    "WQ-S201": "cluster_basin_south",
+    "WQ-S202": "cluster_basin_south",
+    "WQ-S203": "cluster_basin_south",
+    "WQ-S204": "cluster_basin_south",
+    "WQ-IND01": "cluster_industrial_inflow",
+    "WQ-IND02": "cluster_industrial_inflow",
+  };
 
   // Presets mapping
   const PRESETS = {
@@ -93,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
       source: "field"
     },
     thermal_shock: {
-      sensor_id: "WQ-S101",
+      sensor_id: "WQ-IND01",
       timestamp: new Date().toISOString(),
       readings: { pH: 6.2, turbidity: 3.5, conductivity: 490.0, temperature: 28.5 },
       source: "field"
@@ -120,6 +139,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // Search & Filter
+  if (sensorSearchInput) {
+    sensorSearchInput.addEventListener("input", (e) => {
+      searchQuery = e.target.value.toLowerCase().trim();
+      renderSensorGrid(currentSensors);
+    });
+  }
+
+  filterPills.forEach(pill => {
+    pill.addEventListener("click", () => {
+      filterPills.forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      activeFilter = pill.getAttribute("data-filter");
+      renderSensorGrid(currentSensors);
+    });
+  });
+
   // Preset buttons
   document.querySelectorAll(".btn-chip").forEach(chip => {
     chip.addEventListener("click", () => {
@@ -136,15 +172,30 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedSensorId = null;
   });
 
+  // Toast Notification
+  function showToast(msg, isAnomaly = false) {
+    if (!toastContainer) return;
+    const toast = document.createElement("div");
+    toast.className = `toast-message ${isAnomaly ? 'anomaly-toast' : ''}`;
+    toast.innerHTML = msg;
+    toastContainer.appendChild(toast);
+    setTimeout(() => {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 4000);
+  }
+
   // Load Master Dataset
   if (btnLoadMaster) {
     btnLoadMaster.addEventListener("click", async () => {
       try {
-        btnLoadMaster.textContent = "Loading...";
+        btnLoadMaster.innerHTML = `<span>Loading...</span>`;
         const resp = await fetch("/demo/load-master-dataset", { method: "POST" });
         const data = await resp.json();
-        btnLoadMaster.textContent = "⚡ Master Loaded";
-        setTimeout(() => { btnLoadMaster.textContent = "⚡ Load Master Dataset"; }, 2000);
+        btnLoadMaster.innerHTML = `<span style="color:var(--accent-teal);">⚡ Master Loaded</span>`;
+        showToast(`⚡ <strong>Master Dataset Loaded:</strong> Ingested ${data.summary.total_ingested} packets across ${data.summary.active_sensors} sensor nodes.`);
+        setTimeout(() => {
+          btnLoadMaster.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> ⚡ Load Master Dataset`;
+        }, 2500);
         await refreshDashboard();
       } catch (err) {
         console.error("Master dataset load error:", err);
@@ -160,9 +211,14 @@ document.addEventListener("DOMContentLoaded", () => {
         btnToggleStream.classList.add("btn-primary");
         btnToggleStream.classList.remove("btn-outline");
         streamBtnText.textContent = "⏸ Pause Simulator";
+        showToast(`▶ <strong>Live Simulation Started:</strong> Streaming synthetic telemetry ticks...`);
         streamTimer = setInterval(async () => {
           try {
-            await fetch("/demo/generate-stream-tick", { method: "POST" });
+            const resp = await fetch("/demo/generate-stream-tick", { method: "POST" });
+            const data = await resp.json();
+            if (data.is_anomaly) {
+              showToast(`⚠️ <strong>Anomaly Detected on ${data.sensor_id}:</strong> ${data.anomaly_type} (pH: ${data.readings.pH})`, true);
+            }
             await refreshDashboard();
           } catch (e) {
             console.error("Stream tick error:", e);
@@ -172,6 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btnToggleStream.classList.remove("btn-primary");
         btnToggleStream.classList.add("btn-outline");
         streamBtnText.textContent = "▶ Live Simulator";
+        showToast(`⏸ Live Simulator Paused.`);
         if (streamTimer) clearInterval(streamTimer);
       }
     });
@@ -186,6 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ strategy: e.target.value })
       });
       if (resp.ok) {
+        showToast(`Resolver Strategy switched to <strong>${e.target.value}</strong>.`);
         await refreshDashboard();
       }
     } catch (err) {
@@ -198,6 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (confirm("Reset all telemetry state, deduplication caches, and audit logs?")) {
       try {
         await fetch("/reset", { method: "POST" });
+        showToast("System state and audit ledger cleared.");
         await refreshDashboard();
       } catch (err) {
         console.error("Reset failed:", err);
@@ -219,9 +278,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.chain_intact) {
         auditVerifyAlert.className = "alert-box alert-success";
         auditVerifyAlert.innerHTML = `&#10004; <strong>Audit Trail Cryptographically Verified:</strong> All ${data.total_blocks} blocks valid. Latest SHA-256 Block Hash: <code>${data.latest_block_hash.substring(0, 16)}...</code>`;
+        showToast(`&#10004; Audit ledger verified: ${data.total_blocks} blocks intact.`);
       } else {
         auditVerifyAlert.className = "alert-box alert-danger";
         auditVerifyAlert.innerHTML = `&#9888; <strong>Audit Integrity Failure:</strong> ${data.verification_message}`;
+        showToast(`&#9888; Audit Integrity Failure!`, true);
       }
     } catch (err) {
       alert("Verification request failed.");
@@ -255,7 +316,8 @@ document.addEventListener("DOMContentLoaded", () => {
       ingestTraceStatus.className = data.is_duplicate ? "badge badge-purple" : (data.resulting_state.is_anomalous ? "badge badge-rose" : "badge badge-teal");
 
       renderIngestTrace(data, duration);
-      refreshDashboard();
+      showToast(`Packet Ingested: <strong>${data.sensor_id}</strong> (${data.status})`, data.resulting_state.is_anomalous);
+      await refreshDashboard();
     } catch (err) {
       ingestTraceStatus.textContent = "Error";
       ingestTraceStatus.className = "badge badge-rose";
@@ -330,7 +392,8 @@ document.addEventListener("DOMContentLoaded", () => {
       replayStatusBadge.className = "badge badge-teal";
 
       renderReplayResults(data);
-      refreshDashboard();
+      showToast(`Replay simulation completed for <strong>${fixtureName}</strong>.`);
+      await refreshDashboard();
     } catch (err) {
       replayStatusBadge.textContent = "Failed";
       replayStatusBadge.className = "badge badge-rose";
@@ -338,9 +401,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Run all 6 fixtures
+  // Run all fixtures
   btnLoadAllFixtures.addEventListener("click", async () => {
     const fixtures = [
+      "00_master_fleet_simulation.json",
       "01_duplicate_packet_storm.json",
       "02_out_of_order_stream.json",
       "03_conflicting_sources.json",
@@ -349,8 +413,8 @@ document.addEventListener("DOMContentLoaded", () => {
       "06_midnight_boundary_transition.json"
     ];
 
-    replayResultsContainer.innerHTML = `<div style="color: var(--accent-cyan);">Executing full 6-fixture test battery...</div>`;
-    let reportHtml = `<h4 style="color: var(--accent-cyan); margin-bottom: 12px;">Full 6-Fixture Verification Battery</h4>`;
+    replayResultsContainer.innerHTML = `<div style="color: var(--accent-cyan);">Executing full 7-fixture verification battery...</div>`;
+    let reportHtml = `<h4 style="color: var(--accent-cyan); margin-bottom: 14px;">Full Multi-Fixture Verification Battery</h4>`;
 
     for (const fix of fixtures) {
       const resp = await fetch("/replay", {
@@ -367,8 +431,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const inv = data.invariance_report;
 
       reportHtml += `
-        <div style="background: var(--bg-card); padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid var(--accent-teal);">
-          <strong style="color: var(--text-main); font-size: 13px;">${fix}</strong>
+        <div style="background: var(--bg-card); padding: 12px 16px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--accent-teal);">
+          <strong style="color: var(--text-main); font-size: 13.5px;">${fix}</strong>
           <div style="color: var(--text-dim); font-size: 11.5px; margin-top: 4px;">
             Total Events: ${sum.total_events_ingested} | Processed: ${sum.unique_events_processed} | Duplicates: ${sum.duplicates_filtered} | Out-of-Order: ${sum.out_of_order_reordered} | Execution Time: ${sum.execution_time_ms} ms
           </div>
@@ -380,7 +444,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     replayResultsContainer.innerHTML = reportHtml;
-    refreshDashboard();
+    showToast("Full 7-fixture verification battery completed!");
+    await refreshDashboard();
   });
 
   function renderReplayResults(data) {
@@ -389,21 +454,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let html = `
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
-        <div style="background: var(--bg-card); padding: 10px; border-radius: 6px;">
+        <div style="background: var(--bg-card); padding: 12px; border-radius: 8px;">
           <div style="color: var(--text-dim); font-size: 11px;">Total Ingested</div>
-          <div style="font-size: 18px; font-weight: 700; color: var(--text-main);">${sum.total_events_ingested}</div>
+          <div style="font-size: 19px; font-weight: 800; color: var(--text-main);">${sum.total_events_ingested}</div>
         </div>
-        <div style="background: var(--bg-card); padding: 10px; border-radius: 6px;">
+        <div style="background: var(--bg-card); padding: 12px; border-radius: 8px;">
           <div style="color: var(--text-dim); font-size: 11px;">Unique Processed</div>
-          <div style="font-size: 18px; font-weight: 700; color: var(--accent-cyan);">${sum.unique_events_processed}</div>
+          <div style="font-size: 19px; font-weight: 800; color: var(--accent-cyan);">${sum.unique_events_processed}</div>
         </div>
-        <div style="background: var(--bg-card); padding: 10px; border-radius: 6px;">
+        <div style="background: var(--bg-card); padding: 12px; border-radius: 8px;">
           <div style="color: var(--text-dim); font-size: 11px;">Duplicates Filtered</div>
-          <div style="font-size: 18px; font-weight: 700; color: var(--accent-purple);">${sum.duplicates_filtered}</div>
+          <div style="font-size: 19px; font-weight: 800; color: var(--accent-purple);">${sum.duplicates_filtered}</div>
         </div>
-        <div style="background: var(--bg-card); padding: 10px; border-radius: 6px;">
+        <div style="background: var(--bg-card); padding: 12px; border-radius: 8px;">
           <div style="color: var(--text-dim); font-size: 11px;">Out-of-Order Reordered</div>
-          <div style="font-size: 18px; font-weight: 700; color: var(--accent-amber);">${sum.out_of_order_reordered}</div>
+          <div style="font-size: 19px; font-weight: 800; color: var(--accent-amber);">${sum.out_of_order_reordered}</div>
         </div>
       </div>
 
@@ -412,7 +477,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
 
       ${inv ? `
-        <div style="background: ${inv.order_invariant ? 'rgba(16, 185, 129, 0.12)' : 'rgba(244, 63, 94, 0.12)'}; border: 1px solid ${inv.order_invariant ? 'var(--accent-teal)' : 'var(--accent-rose)'}; padding: 12px; border-radius: 6px; margin-top: 14px;">
+        <div style="background: ${inv.order_invariant ? 'rgba(16, 185, 129, 0.12)' : 'rgba(244, 63, 94, 0.12)'}; border: 1px solid ${inv.order_invariant ? 'var(--accent-teal)' : 'var(--accent-rose)'}; padding: 14px; border-radius: 8px; margin-top: 14px;">
           <div style="font-weight: 700; color: ${inv.order_invariant ? 'var(--accent-teal)' : 'var(--accent-rose)'};">
             ${inv.order_invariant ? '&#10004; Deterministic Order Invariance Verified' : '&#9888; Order Invariance Failed'}
           </div>
@@ -424,27 +489,57 @@ document.addEventListener("DOMContentLoaded", () => {
     replayResultsContainer.innerHTML = html;
   }
 
+  // Draw Mini-Sparkline Curve on HTML5 Canvas
+  function drawSparkline(canvas, readingsHistory, isAnom) {
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const width = canvas.width = canvas.offsetWidth || 280;
+    const height = canvas.height = canvas.offsetHeight || 36;
+    ctx.clearRect(0, 0, width, height);
+
+    const values = readingsHistory.length >= 2 ? readingsHistory : [7.3, 7.32, 7.35, 7.31, 7.34];
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max === min ? 1.0 : (max - min);
+
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = isAnom ? "#f43f5e" : "#06b6d4";
+
+    const step = width / (values.length - 1);
+    values.forEach((v, i) => {
+      const x = i * step;
+      const y = height - ((v - min) / range) * (height - 8) - 4;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // Subtle area fill
+    ctx.lineTo(width, height);
+    ctx.lineTo(0, height);
+    ctx.closePath();
+    ctx.fillStyle = isAnom ? "rgba(244, 63, 94, 0.12)" : "rgba(6, 182, 212, 0.12)";
+    ctx.fill();
+  }
+
   // Fetch and Refresh Dashboard State
   async function refreshDashboard() {
     try {
-      // 1. Fetch Fleet Sensors
       const sensorsResp = await fetch("/sensors");
       const sensorsData = await sensorsResp.json();
       currentSensors = sensorsData;
       renderSensorGrid(sensorsData);
 
-      // 2. Fetch Spatial Analytics & KPI
       const spatialResp = await fetch("/analytics/correlations");
       const spatialData = await spatialResp.json();
       updateKPIs(spatialData.fleet_overview);
       renderSpatialClusters(spatialData.clusters);
 
-      // 3. Fetch Audit Block Count
       const auditResp = await fetch("/audit?limit=1");
       const auditData = await auditResp.json();
       kpiAuditBlocks.textContent = auditData.total_records || 0;
 
-      // 4. Update detail scrubber if active
       if (selectedSensorId && currentSensors[selectedSensorId]) {
         loadSensorTimeline(selectedSensorId);
       }
@@ -471,18 +566,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderSensorGrid(sensors) {
-    const sensorIds = Object.keys(sensors);
+    let sensorIds = Object.keys(sensors);
+
+    // Apply Filter & Search
+    if (searchQuery) {
+      sensorIds = sensorIds.filter(id => id.toLowerCase().includes(searchQuery));
+    }
+
+    if (activeFilter === "anomalous_only") {
+      sensorIds = sensorIds.filter(id => sensors[id] && sensors[id].is_anomalous);
+    } else if (activeFilter !== "all") {
+      sensorIds = sensorIds.filter(id => CLUSTER_MAP[id] === activeFilter);
+    }
+
     if (sensorIds.length === 0) {
       sensorFleetGrid.innerHTML = `
-        <div style="grid-column: 1 / -1; padding: 40px; text-align: center; background: var(--bg-dark); border-radius: 12px; border: 1px dashed var(--border-color);">
-          <div style="font-size: 16px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">No IoT Sensor Telemetry Received Yet</div>
-          <div style="font-size: 13px; color: var(--text-dim); margin-bottom: 18px;">Inject events using the Live Packet Injector or load an edge-case fixture in the Temporal Replay Studio.</div>
-          <button id="btn-quick-start" class="btn btn-primary">Load Sample Dataset</button>
+        <div style="grid-column: 1 / -1; padding: 40px; text-align: center; background: var(--bg-card); border-radius: 14px; border: 1px dashed var(--border-color);">
+          <div style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">No IoT Sensor Telemetry Found for Filter</div>
+          <div style="font-size: 13px; color: var(--text-dim); margin-bottom: 18px;">Click "⚡ Load Master Dataset" or toggle "▶ Live Simulator" to populate real-time nodes.</div>
         </div>
       `;
-      document.getElementById("btn-quick-start")?.addEventListener("click", () => {
-        btnLoadAllFixtures.click();
-      });
       return;
     }
 
@@ -491,18 +594,21 @@ document.addEventListener("DOMContentLoaded", () => {
       const s = sensors[id];
       const r = s.readings || {};
       const isAnom = s.is_anomalous;
+      const cluster = CLUSTER_MAP[id] || "default_basin";
 
       html += `
         <div class="sensor-card ${isAnom ? 'anomalous' : ''}" data-sensor-id="${id}">
           <div class="sensor-card-top">
             <div>
               <div class="sensor-card-id">${id}</div>
-              <div class="sensor-card-time">${s.last_event_time || 'N/A'}</div>
+              <div class="sensor-card-time">${s.last_event_time ? s.last_event_time.substring(0, 19).replace('T', ' ') : 'N/A'}</div>
             </div>
             <span class="badge ${isAnom ? 'badge-rose' : 'badge-teal'}">
               ${isAnom ? s.active_anomaly_type : 'NORMAL'}
             </span>
           </div>
+
+          <canvas class="sparkline-canvas" id="sparkline-${id}"></canvas>
 
           <div class="metric-gauges">
             <div class="metric-item">
@@ -515,16 +621,16 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
             <div class="metric-item">
               <span class="metric-label">Conductivity</span>
-              <div class="metric-val">${r.conductivity !== undefined ? r.conductivity.toFixed(1) : '--'} <span class="metric-unit">µS/cm</span></div>
+              <div class="metric-val ${r.conductivity && r.conductivity > 800 ? 'text-amber' : ''}">${r.conductivity !== undefined ? r.conductivity.toFixed(1) : '--'} <span class="metric-unit">µS/cm</span></div>
             </div>
             <div class="metric-item">
               <span class="metric-label">Temperature</span>
-              <div class="metric-val">${r.temperature !== undefined ? r.temperature.toFixed(1) : '--'} <span class="metric-unit">°C</span></div>
+              <div class="metric-val ${r.temperature && r.temperature > 26 ? 'text-rose' : ''}">${r.temperature !== undefined ? r.temperature.toFixed(1) : '--'} <span class="metric-unit">°C</span></div>
             </div>
           </div>
 
           <div class="sensor-card-bottom">
-            <span>Source: <strong style="color: var(--text-main);">${s.last_source}</strong></span>
+            <span>Cluster: <strong style="color: var(--text-main);">${cluster.replace('cluster_', '').replace(/_/g, ' ')}</strong></span>
             <span>Version: <strong style="color: var(--accent-cyan);">v${s.version}</strong></span>
           </div>
         </div>
@@ -532,6 +638,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     sensorFleetGrid.innerHTML = html;
+
+    // Draw sparklines
+    sensorIds.forEach(id => {
+      const canvas = document.getElementById(`sparkline-${id}`);
+      const s = sensors[id];
+      const r = s.readings || {};
+      const dummyCurve = [
+        (r.pH || 7.3) - 0.15,
+        (r.pH || 7.3) + 0.05,
+        (r.pH || 7.3) - 0.08,
+        (r.pH || 7.3)
+      ];
+      drawSparkline(canvas, dummyCurve, s.is_anomalous);
+    });
 
     // Attach click listeners
     document.querySelectorAll(".sensor-card").forEach(card => {
@@ -546,6 +666,7 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedSensorId = sensorId;
     sensorDetailCard.classList.remove("hidden");
     detailSensorTitle.textContent = `Sensor Node: ${sensorId}`;
+    detailSensorCluster.textContent = CLUSTER_MAP[sensorId] || "Zone";
     await loadSensorTimeline(sensorId);
     sensorDetailCard.scrollIntoView({ behavior: 'smooth' });
   }
@@ -582,12 +703,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const historicalState = await resp.json();
 
       reconstructedStateBox.innerHTML = `
-        <div style="color: var(--accent-cyan); font-weight: 700; margin-bottom: 8px;">Reconstructed State as of ${historicalState.last_event_time}:</div>
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px;">
-          <div>pH: <strong style="color:#fff;">${historicalState.readings.pH ?? '--'}</strong></div>
-          <div>Turbidity: <strong style="color:#fff;">${historicalState.readings.turbidity ?? '--'}</strong></div>
-          <div>Conductivity: <strong style="color:#fff;">${historicalState.readings.conductivity ?? '--'}</strong></div>
-          <div>Temperature: <strong style="color:#fff;">${historicalState.readings.temperature ?? '--'}</strong></div>
+        <div style="color: var(--accent-cyan); font-weight: 700; margin-bottom: 10px;">Reconstructed State as of ${historicalState.last_event_time}:</div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px;">
+          <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px;">pH: <strong style="color:#fff;">${historicalState.readings.pH ?? '--'}</strong></div>
+          <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px;">Turbidity: <strong style="color:#fff;">${historicalState.readings.turbidity ?? '--'}</strong></div>
+          <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px;">Conductivity: <strong style="color:#fff;">${historicalState.readings.conductivity ?? '--'}</strong></div>
+          <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px;">Temperature: <strong style="color:#fff;">${historicalState.readings.temperature ?? '--'}</strong></div>
         </div>
         <div style="font-size: 11.5px; color: var(--text-dim);">
           Timeline Version: ${historicalState.version} | Events Ingested up to T: ${historicalState.total_events_processed} | Active Resolver: ${strategySelector.value}
@@ -610,22 +731,22 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="cluster-card ${isPlume ? 'plume-alert' : ''}">
           <div class="cluster-header">
             <div>
-              <h3 style="font-size: 15px; font-weight: 700;">${cName.replace(/_/g, ' ').toUpperCase()}</h3>
-              <div style="font-size: 11px; color: var(--text-dim);">Catchment Basin Cluster</div>
+              <h3 style="font-size: 16px; font-weight: 700;">${cName.replace(/_/g, ' ').toUpperCase()}</h3>
+              <div style="font-size: 11.5px; color: var(--text-dim);">Catchment Basin Cluster</div>
             </div>
             <span class="badge ${isPlume ? 'badge-rose' : (isWarn ? 'badge-amber' : 'badge-teal')}">
               ${c.status}
             </span>
           </div>
 
-          <div style="font-size: 13px; margin-bottom: 8px;">
+          <div style="font-size: 13px; margin-bottom: 10px;">
             Sensors: <strong>${c.total_sensors}</strong> | Anomalies: <strong style="color:${isPlume ? 'var(--accent-rose)' : 'var(--accent-teal)'}">${c.anomalous_sensors}</strong>
           </div>
 
           <div class="cluster-nodes-list">
             ${c.sensors.map(sId => {
               const isSensorAnom = currentSensors[sId] && currentSensors[sId].is_anomalous;
-              return `<span class="mono-badge" style="border-color:${isSensorAnom ? 'var(--accent-rose)' : 'var(--border-color)'}; color:${isSensorAnom ? 'var(--accent-rose)' : 'var(--text-main)'};">${sId}</span>`;
+              return `<span class="mono-badge" style="border-color:${isSensorAnom ? 'var(--accent-rose)' : 'var(--border-color)'}; color:${isSensorAnom ? 'var(--accent-rose)' : 'var(--text-main)'}; cursor:pointer;" onclick="document.querySelector('[data-tab=tab-fleet]').click(); setTimeout(() => openSensorDetail('${sId}'), 100);">${sId}</span>`;
             }).join("")}
           </div>
         </div>
@@ -663,7 +784,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <td class="hash-cell" title="${r.current_hash}">${r.current_hash}</td>
             <td class="hash-cell" title="${r.prev_hash}">${r.prev_hash}</td>
             <td><span class="badge ${isAnom ? 'badge-rose' : 'badge-green'}">${isAnom ? r.anomaly_report.anomaly_type : 'OK'}</span></td>
-            <td style="color: var(--text-dim); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            <td style="color: var(--text-dim); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
               ${r.conflict_trace ? r.conflict_trace.resolution_notes.join('; ') : 'Direct ingest'}
             </td>
           </tr>
@@ -675,7 +796,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Periodic fast polling every 800ms for instant real-time responsiveness
+  // Periodic fast polling every 800ms
   setInterval(refreshDashboard, 800);
   refreshDashboard();
 });
