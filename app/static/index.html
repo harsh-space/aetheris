@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HydroPulse | Real-Time IoT Telemetry & Anomaly Resolution Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <div class="nav-brand">
+        <div class="brand-logo">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">HydroPulse<span class="brand-accent">.ai</span></span>
+          <span class="brand-subtitle">IoT Anomaly Resolution & Temporal Replay Engine</span>
+        </div>
+      </div>
+
+      <div class="nav-controls">
+        <div class="status-pill status-healthy">
+          <span class="pulse-dot"></span>
+          <span id="engine-status-text">Engine Online</span>
+        </div>
+
+        <div class="control-group">
+          <label for="strategy-selector" class="control-label">Resolver:</label>
+          <select id="strategy-selector" class="select-input">
+            <option value="source_priority">Source Priority (Lab > Field > Backup)</option>
+            <option value="confidence_weighted">Confidence Weighted Fusion</option>
+            <option value="latest">Latest Timestamp Wins</option>
+          </select>
+        </div>
+
+        <button id="btn-verify-audit" class="btn btn-outline" title="Verify SHA-256 Blockchain Audit Trail">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          Verify Audit Chain
+        </button>
+
+        <button id="btn-export-csv" class="btn btn-outline" title="Export current sensor states to CSV">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Export CSV
+        </button>
+
+        <button id="btn-reset-engine" class="btn btn-danger-outline" title="Reset all telemetry and audit logs">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v6h6"></path><path d="M21 12A9 9 0 0 0 6 5.3L3 8"></path><path d="M21 22v-6h-6"></path><path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"></path></svg>
+          Reset
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dashboard Container -->
+    <main class="dashboard-body">
+      <!-- KPI Stats Bar -->
+      <section class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-title">Active Sensors</span>
+            <span class="kpi-icon icon-cyan">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+            </span>
+          </div>
+          <div class="kpi-value" id="kpi-sensors-count">0</div>
+          <div class="kpi-footer"><span class="badge badge-teal">Distributed Fleet</span></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-title">Total Ingested</span>
+            <span class="kpi-icon icon-blue">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            </span>
+          </div>
+          <div class="kpi-value" id="kpi-total-events">0</div>
+          <div class="kpi-footer"><span id="kpi-latency-tag" class="badge badge-blue">Sub-millisecond</span></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-title">Deduplicated (Idempotent)</span>
+            <span class="kpi-icon icon-purple">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </span>
+          </div>
+          <div class="kpi-value" id="kpi-duplicates-count">0</div>
+          <div class="kpi-footer"><span class="badge badge-purple">Zero State Drift</span></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-title">Out-of-Order Reordered</span>
+            <span class="kpi-icon icon-amber">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+            </span>
+          </div>
+          <div class="kpi-value" id="kpi-ooo-count">0</div>
+          <div class="kpi-footer"><span class="badge badge-amber">Bi-Temporal Timeline</span></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-title">ML Anomalies Flagged</span>
+            <span class="kpi-icon icon-rose">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </span>
+          </div>
+          <div class="kpi-value" id="kpi-anomalies-count">0</div>
+          <div class="kpi-footer"><span id="kpi-anomalies-tag" class="badge badge-green">Fleet Healthy</span></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-title">Audit Block Height</span>
+            <span class="kpi-icon icon-teal">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            </span>
+          </div>
+          <div class="kpi-value" id="kpi-audit-blocks">0</div>
+          <div class="kpi-footer"><span class="badge badge-teal">SHA-256 Chained</span></div>
+        </div>
+      </section>
+
+      <!-- Navigation Tabs -->
+      <nav class="dashboard-tabs">
+        <button class="tab-btn active" data-tab="tab-fleet">Fleet Live Monitor</button>
+        <button class="tab-btn" data-tab="tab-replay">Temporal Replay Studio</button>
+        <button class="tab-btn" data-tab="tab-ingest">Live Ingest & Packet Injector</button>
+        <button class="tab-btn" data-tab="tab-spatial">Spatial Corroboration & Topology</button>
+        <button class="tab-btn" data-tab="tab-audit">Cryptographic Audit Ledger</button>
+      </nav>
+
+      <!-- TAB 1: FLEET LIVE MONITOR -->
+      <div id="tab-fleet" class="tab-pane active">
+        <div class="fleet-header">
+          <h2>Distributed Water Quality Fleet</h2>
+          <p class="section-desc">Real-time state reconstructed from asynchronous, out-of-order, and fragmented IoT telemetry streams.</p>
+        </div>
+        <div id="sensor-fleet-grid" class="sensor-grid">
+          <!-- Dynamic Sensor Cards -->
+        </div>
+
+        <!-- Sensor Detail / Historical Time-Scrubber Modal Container -->
+        <div id="sensor-detail-card" class="sensor-detail-panel hidden">
+          <div class="detail-panel-header">
+            <div>
+              <h3 id="detail-sensor-title">Sensor Details</h3>
+              <span id="detail-sensor-cluster" class="badge badge-blue">Zone</span>
+            </div>
+            <button id="btn-close-detail" class="btn btn-sm btn-outline">Close</button>
+          </div>
+          <div class="detail-body">
+            <div class="detail-timeline-container">
+              <label class="control-label">Bi-Temporal Historical Scrubber (Point-in-Time State Reconstruction):</label>
+              <div class="scrubber-bar">
+                <input type="range" id="timeline-range-slider" min="0" max="0" value="0" step="1" class="slider-input">
+                <span id="slider-timestamp-label" class="mono-badge">Select point in time</span>
+              </div>
+            </div>
+            <div id="reconstructed-state-box" class="reconstructed-box"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: TEMPORAL REPLAY STUDIO -->
+      <div id="tab-replay" class="tab-pane">
+        <div class="replay-grid">
+          <div class="card panel">
+            <div class="card-header">
+              <h3>Execute Temporal Replay</h3>
+              <span class="badge badge-purple">Deterministic Invariance</span>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label for="replay-fixture-select">Select Edge-Case Fixture:</label>
+                <select id="replay-fixture-select" class="select-input">
+                  <option value="01_duplicate_packet_storm.json">01. Duplicate Packet Storm (Idempotency)</option>
+                  <option value="02_out_of_order_stream.json">02. Out-of-Order Stream (Bi-Temporal Ordering)</option>
+                  <option value="03_conflicting_sources.json">03. Conflicting Sources (Identity Resolution)</option>
+                  <option value="04_partial_reading_merges.json">04. Partial Reading Merges (Metric Fusion)</option>
+                  <option value="05_drift_vs_spike_correlation.json">05. Sensor Drift vs Contamination Plume</option>
+                  <option value="06_midnight_boundary_transition.json">06. Midnight UTC Transition Boundary</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="replay-strategy-select">Conflict Resolution Strategy:</label>
+                <select id="replay-strategy-select" class="select-input">
+                  <option value="source_priority">Source Priority (Lab > Field > Backup)</option>
+                  <option value="confidence_weighted">Confidence-Weighted Fusion</option>
+                  <option value="latest">Latest Timestamp Wins</option>
+                </select>
+              </div>
+
+              <div class="form-check-group">
+                <label class="checkbox-container">
+                  <input type="checkbox" id="replay-shuffle-check">
+                  <span class="checkbox-label">Randomize / Shuffle Ingestion Order</span>
+                </label>
+                <label class="checkbox-container">
+                  <input type="checkbox" id="replay-invariance-check" checked>
+                  <span class="checkbox-label">Run 5-Permutation Order Invariance Verification</span>
+                </label>
+              </div>
+
+              <div class="btn-row">
+                <button id="btn-run-replay" class="btn btn-primary">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  Run Replay Simulation
+                </button>
+                <button id="btn-load-all-fixtures" class="btn btn-outline">
+                  Run All 6 Edge-Case Fixtures
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card panel">
+            <div class="card-header">
+              <h3>Replay Diagnostics & Verification Report</h3>
+              <span id="replay-status-badge" class="badge badge-teal">Ready</span>
+            </div>
+            <div class="card-body">
+              <div id="replay-results-container" class="diagnostic-box">
+                <p class="text-muted">Select an edge-case fixture and click "Run Replay Simulation" to view execution timing, idempotency metrics, anomaly detections, and mathematical order-invariance verification proofs.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: LIVE INGEST & PACKET INJECTOR -->
+      <div id="tab-ingest" class="tab-pane">
+        <div class="ingest-grid">
+          <div class="card panel">
+            <div class="card-header">
+              <h3>Telemetry Packet Injector (POST /events)</h3>
+              <span class="badge badge-blue">REST API</span>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label for="event-payload-editor">JSON Telemetry Payload:</label>
+                <textarea id="event-payload-editor" class="code-editor" rows="12">{
+  "sensor_id": "WQ-S123",
+  "timestamp": "2024-06-15T10:30:00Z",
+  "readings": {
+    "pH": 6.8,
+    "turbidity": 2.1,
+    "conductivity": 450.0,
+    "temperature": 22.5
+  },
+  "source": "field"
+}</textarea>
+              </div>
+
+              <div class="quick-preset-row">
+                <button class="btn-chip" data-preset="normal">Standard Clean</button>
+                <button class="btn-chip" data-preset="dup">Duplicate Burst</button>
+                <button class="btn-chip" data-preset="ooo">Out-of-Order Delayed</button>
+                <button class="btn-chip" data-preset="lab_override">Lab Authority Override</button>
+                <button class="btn-chip" data-preset="partial">Partial pH Only</button>
+                <button class="btn-chip" data-preset="thermal_shock">Thermal Shock Anomaly</button>
+                <button class="btn-chip" data-preset="acid_spike">Severe Acid Spill</button>
+              </div>
+
+              <div class="btn-row" style="margin-top: 15px;">
+                <button id="btn-send-event" class="btn btn-primary">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                  Send Event (POST /events)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card panel">
+            <div class="card-header">
+              <h3>Ingestion Trace & Anomaly Explanation</h3>
+              <span id="ingest-trace-status" class="badge badge-teal">Idle</span>
+            </div>
+            <div class="card-body">
+              <div id="ingest-response-container" class="diagnostic-box">
+                <p class="text-muted">Transmit an event to inspect cryptographic SHA-256 fingerprinting, deduplication verdict, conflict resolution breakdown, and ML anomaly classification score.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: SPATIAL CORROBORATION & TOPOLOGY -->
+      <div id="tab-spatial" class="tab-pane">
+        <div class="spatial-header">
+          <h2>Multi-Sensor Spatial Corroboration & Catchment Clusters</h2>
+          <p class="section-desc">Distinguishes localized electrode defects from systemic chemical contamination plumes propagating through river basins.</p>
+        </div>
+        <div id="spatial-cluster-grid" class="spatial-grid">
+          <!-- Dynamic Spatial Clusters -->
+        </div>
+      </div>
+
+      <!-- TAB 5: CRYPTOGRAPHIC AUDIT LEDGER -->
+      <div id="tab-audit" class="tab-pane">
+        <div class="audit-header">
+          <div>
+            <h2>Cryptographically Linked Audit Ledger</h2>
+            <p class="section-desc">Immutable SHA-256 blockchain ledger tracking all state mutations, conflict resolutions, and anomaly decisions.</p>
+          </div>
+          <button id="btn-verify-audit-pane" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            Verify Complete Chain
+          </button>
+        </div>
+
+        <div id="audit-verify-alert" class="alert-box alert-success hidden"></div>
+
+        <div class="card panel">
+          <div class="card-body no-padding">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Block #</th>
+                    <th>Action</th>
+                    <th>Sensor ID</th>
+                    <th>Event Time</th>
+                    <th>Current Hash (SHA-256)</th>
+                    <th>Previous Hash</th>
+                    <th>Anomaly</th>
+                    <th>Trace</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-table-body">
+                  <tr><td colspan="8" class="text-center text-muted">No audit blocks recorded yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

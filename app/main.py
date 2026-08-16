@@ -1,0 +1,300 @@
+"""
+FastAPI REST API Server for Real-Time IoT Anomaly Resolution with Temporal Replay.
+"""
+
+from __future__ import annotations
+import csv
+import io
+import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+from fastapi import FastAPI, HTTPException, Query, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
+from engine.models import (
+    AnomalyReport,
+    AuditRecord,
+    ConflictDecisionTrace,
+    ReplayResult,
+    SensorState,
+    TelemetryEvent,
+)
+from engine.processor import TelemetryProcessor
+from engine.replay_engine import ReplayEngine
+
+app = FastAPI(
+    title="Real-Time IoT Anomaly Resolution & Temporal Replay API",
+    description="High-throughput deterministic IoT data processing engine with ML anomaly detection, temporal state reconstruction, and immutable audit trail.",
+    version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Global processor instance
+processor = TelemetryProcessor(strategy_name="source_priority", db_path="iot_audit_ledger.db")
+replay_engine = ReplayEngine(strategy_name="source_priority")
+
+
+# Request/Response schemas
+class IngestResponse(BaseModel):
+    status: str
+    is_duplicate: bool
+    is_out_of_order: bool
+    sensor_id: str
+    event_timestamp: str
+    resulting_state: SensorState
+    anomaly_report: AnomalyReport
+    conflict_trace: ConflictDecisionTrace
+    audit_hash: Optional[str] = None
+
+
+class StrategyConfigRequest(BaseModel):
+    strategy: str = Field(..., description="Strategy: 'source_priority', 'confidence_weighted', or 'latest'")
+
+
+class ReplayRequest(BaseModel):
+    fixture_name: Optional[str] = Field(default=None, description="Preset fixture name (e.g. 01_duplicate_packet_storm.json)")
+    events: Optional[List[TelemetryEvent]] = Field(default=None, description="Custom event list")
+    strategy: Optional[str] = Field(default="source_priority")
+    shuffle: bool = Field(default=False, description="Shuffle event stream before replay")
+    verify_invariance: bool = Field(default=False, description="Run multi-permutation order invariance verification")
+
+
+# API Endpoints
+@app.post("/events", response_model=IngestResponse, tags=["Telemetry Ingestion"])
+def ingest_event(event: TelemetryEvent):
+    """
+    Ingests an IoT telemetry event.
+    Guarantees idempotent deduplication, partial metric merging,
+    multi-source conflict resolution, and deterministic ML anomaly evaluation.
+    """
+    try:
+        state, anomaly, trace, audit_rec, is_dup, is_ooo = processor.process_event(event)
+        audit_hash = audit_rec.current_hash if audit_rec else None
+
+        status_str = "DUPLICATE_SKIPPED" if is_dup else ("OUT_OF_ORDER_RECONSTRUCTED" if is_ooo else "PROCESSED")
+        return IngestResponse(
+            status=status_str,
+            is_duplicate=is_dup,
+            is_out_of_order=is_ooo,
+            sensor_id=event.sensor_id,
+            event_timestamp=event.timestamp,
+            resulting_state=state,
+            anomaly_report=anomaly,
+            conflict_trace=trace,
+            audit_hash=audit_hash
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/sensors", response_model=Dict[str, SensorState], tags=["Fleet State"])
+def get_all_sensors():
+    """Returns the current resolved state for all active sensors."""
+    return processor.get_all_states()
+
+
+@app.get("/sensors/{sensor_id}", response_model=SensorState, tags=["Fleet State"])
+def get_sensor(sensor_id: str):
+    """Returns state for a specific sensor node."""
+    state = processor.get_sensor_state(sensor_id)
+    if not state:
+        raise HTTPException(status_code=404, detail=f"Sensor '{sensor_id}' not found.")
+    return state
+
+
+@app.get("/sensors/{sensor_id}/timeline", tags=["Fleet State"])
+def get_sensor_timeline(sensor_id: str):
+    """Returns the full chronological event timeline for a sensor."""
+    events = processor.state_store.get_timeline_events(sensor_id)
+    return {
+        "sensor_id": sensor_id,
+        "total_events": len(events),
+        "timeline": [e.model_dump() for e in events]
+    }
+
+
+@app.get("/sensors/{sensor_id}/historical", response_model=SensorState, tags=["Temporal Reconstruction"])
+def get_historical_state(
+    sensor_id: str,
+    timestamp: str = Query(..., description="Target UTC ISO-8601 timestamp to reconstruct state at")
+):
+    """
+    Bi-temporal state reconstruction: computes the deterministic state of the sensor
+    as it existed at any historical timestamp.
+    """
+    state = processor.get_historical_state(sensor_id, timestamp)
+    if not state:
+        raise HTTPException(status_code=404, detail=f"No telemetry found for {sensor_id} at or before {timestamp}")
+    return state
+
+
+@app.post("/replay", tags=["Temporal Replay"])
+def execute_replay(req: ReplayRequest):
+    """
+    Executes a temporal replay simulation using custom events or pre-built edge-case fixtures.
+    """
+    events: List[TelemetryEvent] = []
+
+    if req.fixture_name:
+        fixture_path = Path("fixtures") / req.fixture_name
+        if not fixture_path.exists():
+            # Try with .json extension
+            fixture_path = Path("fixtures") / f"{req.fixture_name}.json"
+        if not fixture_path.exists():
+            raise HTTPException(status_code=404, detail=f"Fixture '{req.fixture_name}' not found.")
+        
+        with open(fixture_path, "r", encoding="utf-8") as f:
+            raw_data = json.load(f)
+            events = [TelemetryEvent(**item) for item in raw_data]
+    elif req.events:
+        events = req.events
+    else:
+        raise HTTPException(status_code=400, detail="Must provide either 'fixture_name' or 'events' list.")
+
+    strat = req.strategy or processor.resolver.__class__.__name__
+    _, replay_res = replay_engine.replay_stream(
+        events=events,
+        strategy_name=strat,
+        shuffle=req.shuffle
+    )
+
+    invariance_report = None
+    if req.verify_invariance:
+        is_inv, msg, details = replay_engine.verify_order_invariance(events, permutations=5)
+        invariance_report = {
+            "order_invariant": is_inv,
+            "message": msg,
+            "details": details
+        }
+
+    return {
+        "replay_summary": replay_res.model_dump(),
+        "invariance_report": invariance_report
+    }
+
+
+@app.get("/fixtures", tags=["Temporal Replay"])
+def list_fixtures():
+    """Lists all available test fixtures in the repository."""
+    fixtures_dir = Path("fixtures")
+    if not fixtures_dir.exists():
+        return {"fixtures": []}
+    files = sorted([f.name for f in fixtures_dir.glob("*.json")])
+    return {"fixtures": files}
+
+
+@app.get("/audit", tags=["Audit Ledger"])
+def get_audit_trail(
+    sensor_id: Optional[str] = None,
+    limit: int = Query(default=100, ge=1, le=1000)
+):
+    """Returns cryptographic audit trail records."""
+    records = processor.get_audit_trail(sensor_id=sensor_id, limit=limit)
+    return {
+        "total_records": processor.audit_ledger.get_record_count(),
+        "latest_hash": processor.audit_ledger.get_latest_hash(),
+        "records": [r.model_dump() for r in records]
+    }
+
+
+@app.post("/verify-integrity", tags=["Audit Ledger"])
+def verify_audit_integrity():
+    """
+    Cryptographically verifies the entire SHA-256 hash chain from genesis block to head.
+    Detects any payload tampering or data corruption.
+    """
+    is_valid, msg = processor.verify_ledger()
+    return {
+        "chain_intact": is_valid,
+        "latest_block_hash": processor.audit_ledger.get_latest_hash(),
+        "total_blocks": processor.audit_ledger.get_record_count(),
+        "verification_message": msg
+    }
+
+
+@app.get("/analytics/correlations", tags=["Spatial Analytics"])
+def get_spatial_correlations():
+    """Returns spatial cluster health summaries and multi-sensor plume alerts."""
+    all_states = processor.get_all_states()
+    summary = processor.spatial_correlator.get_cluster_status_summary(all_states)
+    return {
+        "fleet_overview": {
+            "total_sensors": len(all_states),
+            "anomalous_sensors": sum(1 for s in all_states.values() if s.is_anomalous),
+            "total_events_processed": processor.total_received,
+            "duplicates_filtered": processor.total_duplicates,
+            "out_of_order_reordered": processor.total_out_of_order,
+        },
+        "clusters": summary
+    }
+
+
+@app.post("/config/strategy", tags=["System Configuration"])
+def configure_strategy(req: StrategyConfigRequest):
+    """Dynamically updates the active conflict resolution strategy."""
+    processor.set_strategy(req.strategy)
+    return {
+        "status": "SUCCESS",
+        "active_strategy": processor.resolver.__class__.__name__,
+        "message": f"Conflict resolution strategy set to '{req.strategy}' and existing states rebuilt."
+    }
+
+
+@app.post("/reset", tags=["System Configuration"])
+def reset_system():
+    """Resets all engine state and audit records for fresh testing."""
+    processor.reset()
+    return {"status": "SUCCESS", "message": "Engine state and audit ledger cleared."}
+
+
+@app.get("/export/csv", tags=["Data Export"])
+def export_csv():
+    """Exports current fleet sensor states to downloadable CSV."""
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["sensor_id", "last_event_time", "pH", "turbidity", "conductivity", "temperature", "is_anomalous", "anomaly_type", "version", "last_source"])
+    
+    for s_id, s in processor.get_all_states().items():
+        r = s.readings
+        writer.writerow([
+            s.sensor_id,
+            s.last_event_time,
+            r.get("pH", ""),
+            r.get("turbidity", ""),
+            r.get("conductivity", ""),
+            r.get("temperature", ""),
+            s.is_anomalous,
+            s.active_anomaly_type.value,
+            s.version,
+            s.last_source
+        ])
+    
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=iot_water_quality_state.csv"}
+    )
+
+
+# Serve Static Frontend Dashboard
+static_dir = Path(__file__).parent / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+@app.get("/", response_class=HTMLResponse, tags=["Dashboard UI"])
+def get_dashboard():
+    index_file = static_dir / "index.html"
+    if index_file.exists():
+        with open(index_file, "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h1>IoT Telemetry Engine Running. Dashboard static files loading...</h1>"
