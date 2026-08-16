@@ -53,7 +53,7 @@ def generate_synthetic_telemetry(count: int = 10000) -> list[TelemetryEvent]:
 
 def run_benchmark():
     print("=" * 70)
-    print(" HYDRO-PULSE SYSTEM BENCHMARK (10,000 EVENTS)")
+    print(" AETHERIS SYSTEM BENCHMARK (10,000 EVENTS)")
     print("=" * 70)
 
     print("Generating 10,000 synthetic IoT events with jitter, bursts & anomalies...")

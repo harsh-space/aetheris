@@ -1,4 +1,4 @@
-// HydroPulse IoT Telemetry & Anomaly Resolution Client Application
+// Aetheris IoT Telemetry & Anomaly Resolution Client Application
 
 document.addEventListener("DOMContentLoaded", () => {
   // State variables

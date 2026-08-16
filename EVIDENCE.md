@@ -2,7 +2,7 @@
 
 > **Evaluation Baseline**: *"Academic pedigree, confidence, speed, and visual polish are not substitutes for attributable engineering evidence."*
 
-This document provides attributable, verifiable engineering evidence demonstrating how **HydroPulse** fulfills all 6 core evaluation dimensions.
+This document provides attributable, verifiable engineering evidence demonstrating how **Aetheris** fulfills all 6 core evaluation dimensions.
 
 ---
 

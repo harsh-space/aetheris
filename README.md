@@ -1,11 +1,6 @@
-# HydroPulse: Real-Time IoT Telemetry & Anomaly Resolution Engine
+# Aetheris: Real-Time IoT Telemetry & Anomaly Resolution Engine
 
-[![Tests](https://img.shields.io/badge/Tests-22%20Passing-brightgreen.svg)]()
-[![Python](https://img.shields.io/badge/Python-3.13-blue.svg)]()
-[![License](https://img.shields.io/badge/License-MIT-purple.svg)]()
-[![Determinism](https://img.shields.io/badge/Replay-100%25%20Deterministic-teal.svg)]()
-
-**HydroPulse** is a high-performance, deterministic IoT telemetry processing and anomaly resolution engine built for distributed water quality monitoring grids (`pH`, `turbidity`, `conductivity`, `temperature`).
+**Aetheris** is a high-performance, deterministic IoT telemetry processing and anomaly resolution engine built for distributed water quality monitoring grids (`pH`, `turbidity`, `conductivity`, `temperature`).
 
 It solves the challenges of unreliable rural network connectivity (packet jitter, packet storms, severe out-of-order arrival, and partial sensor telemetry) using:
 1. **Idempotent Cryptographic Ingestion**: Zero state drift during duplicate packet storms.

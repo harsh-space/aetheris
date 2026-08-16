@@ -25,7 +25,7 @@ from engine.processor import TelemetryProcessor
 from engine.replay_engine import ReplayEngine
 
 app = FastAPI(
-    title="Real-Time IoT Anomaly Resolution & Temporal Replay API",
+    title="Aetheris - Real-Time IoT Anomaly Resolution & Temporal Replay API",
     description="High-throughput deterministic IoT data processing engine with ML anomaly detection, temporal state reconstruction, and immutable audit trail.",
     version="1.0.0"
 )

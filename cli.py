@@ -1,5 +1,5 @@
 """
-HydroPulse Command-Line Interface (CLI).
+Aetheris Command-Line Interface (CLI).
 Allows engineers to ingest telemetry, run replay simulations, verify audit chain integrity,
 and inspect fleet states from the terminal.
 """
@@ -36,7 +36,7 @@ def cmd_ingest(args):
 
     state, anom, trace, audit_rec, is_dup, is_ooo = processor.process_event(event)
     print("=" * 60)
-    print(f" HYDRO-PULSE EVENT INGESTION REPORT")
+    print(f" AETHERIS EVENT INGESTION REPORT")
     print("=" * 60)
     print(f"Status:             {'DUPLICATE_SKIPPED' if is_dup else ('OUT_OF_ORDER_REINDEXED' if is_ooo else 'PROCESSED')}")
     print(f"Sensor ID:          {state.sensor_id}")
@@ -66,7 +66,7 @@ def cmd_replay(args):
     _, result = replay_engine.replay_stream(events, strategy_name=args.strategy, shuffle=args.shuffle)
 
     print("=" * 60)
-    print(f" HYDRO-PULSE TEMPORAL REPLAY SIMULATION: {fixture_path.name}")
+    print(f" AETHERIS TEMPORAL REPLAY SIMULATION: {fixture_path.name}")
     print("=" * 60)
     print(f"Total Ingested:        {result.total_events_ingested}")
     print(f"Unique Processed:      {result.unique_events_processed}")
@@ -98,12 +98,12 @@ def cmd_verify_audit(args):
 
 def cmd_server(args):
     import uvicorn
-    print(f"Starting HydroPulse FastAPI Server on http://{args.host}:{args.port}")
+    print(f"Starting Aetheris FastAPI Server on http://{args.host}:{args.port}")
     uvicorn.run("app.main:app", host=args.host, port=args.port, reload=args.reload)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="HydroPulse IoT Telemetry & Anomaly Resolution CLI")
+    parser = argparse.ArgumentParser(description="Aetheris IoT Telemetry & Anomaly Resolution CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Ingest
