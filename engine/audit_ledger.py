@@ -136,29 +136,30 @@ class AuditLedger:
 
         # Store in SQLite
         try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    INSERT INTO audit_trail (
-                        audit_id, prev_hash, current_hash, action, sensor_id,
-                        event_timestamp, received_timestamp, event_fingerprint,
-                        raw_event, conflict_trace, anomaly_report, resulting_state
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    audit_id,
-                    record.prev_hash,
-                    record.current_hash,
-                    record.action,
-                    record.sensor_id,
-                    record.event_timestamp,
-                    record.received_timestamp,
-                    record.event_fingerprint,
-                    json.dumps(record.raw_event),
-                    json.dumps(record.conflict_trace.model_dump() if record.conflict_trace else None),
-                    json.dumps(record.anomaly_report.model_dump() if record.anomaly_report else None),
-                    json.dumps(record.resulting_state)
-                ))
-                conn.commit()
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO audit_trail (
+                    audit_id, prev_hash, current_hash, action, sensor_id,
+                    event_timestamp, received_timestamp, event_fingerprint,
+                    raw_event, conflict_trace, anomaly_report, resulting_state
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                audit_id,
+                record.prev_hash,
+                record.current_hash,
+                record.action,
+                record.sensor_id,
+                record.event_timestamp,
+                record.received_timestamp,
+                record.event_fingerprint,
+                json.dumps(record.raw_event),
+                json.dumps(record.conflict_trace.model_dump() if record.conflict_trace else None),
+                json.dumps(record.anomaly_report.model_dump() if record.anomaly_report else None),
+                json.dumps(record.resulting_state)
+            ))
+            conn.commit()
+            conn.close()
         except Exception:
             pass
 
