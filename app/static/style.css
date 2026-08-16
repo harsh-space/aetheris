@@ -765,38 +765,41 @@ body {
   padding: 0;
 }
 
-.form-group {
-  margin-bottom: 18px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
-
-.form-check-group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 22px;
-}
-
-.checkbox-container {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  cursor: pointer;
-  font-size: 13px;
+.select-input-styled {
+  width: 100%;
+  background: var(--bg-deep);
   color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.btn-row {
+.select-input-styled:hover, .select-input-styled:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.15);
+}
+
+.select-input-styled option {
+  background: var(--bg-dark);
+  color: #fff;
+  padding: 10px;
+}
+
+.replay-actions-row {
   display: flex;
   gap: 12px;
+  margin-top: 24px;
   flex-wrap: wrap;
+}
+
+.replay-actions-row .btn {
+  padding: 10px 20px;
 }
 
 .code-editor {

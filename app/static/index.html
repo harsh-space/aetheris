@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css?v=7">
+  <link rel="stylesheet" href="/static/style.css?v=8">
 </head>
 <body>
   <div class="app-layout">
@@ -197,13 +197,13 @@
           <div class="card panel">
             <div class="card-header">
               <h3>Execute Temporal Replay</h3>
-              <span class="badge badge-purple">Deterministic Invariance</span>
+              <span class="badge badge-purple">Mathematical Invariance</span>
             </div>
             <div class="card-body">
               <div class="form-group">
-                <label for="replay-fixture-select">Select Edge-Case Fixture:</label>
-                <select id="replay-fixture-select" class="select-input">
-                  <option value="00_master_fleet_simulation.json">⭐ 00. Master Fleet Simulation (All 6 PRD Scenarios Combined)</option>
+                <label for="replay-fixture-select">Select Edge-Case Scenario:</label>
+                <select id="replay-fixture-select" class="select-input-styled">
+                  <option value="00_master_fleet_simulation.json">Master Fleet Simulation (All 6 PRD Scenarios)</option>
                   <option value="01_duplicate_packet_storm.json">01. Duplicate Packet Storm (Idempotency)</option>
                   <option value="02_out_of_order_stream.json">02. Out-of-Order Stream (Bi-Temporal Ordering)</option>
                   <option value="03_conflicting_sources.json">03. Conflicting Sources (Identity Resolution)</option>
@@ -213,33 +213,13 @@
                 </select>
               </div>
 
-              <div class="form-group">
-                <label for="replay-strategy-select">Conflict Resolution Strategy:</label>
-                <select id="replay-strategy-select" class="select-input">
-                  <option value="source_priority">Source Priority (Lab > Field > Backup)</option>
-                  <option value="confidence_weighted">Confidence-Weighted Fusion</option>
-                  <option value="latest">Latest Timestamp Wins</option>
-                </select>
-              </div>
-
-              <div class="form-check-group">
-                <label class="checkbox-container">
-                  <input type="checkbox" id="replay-shuffle-check">
-                  <span class="checkbox-label">Randomize / Shuffle Ingestion Order</span>
-                </label>
-                <label class="checkbox-container">
-                  <input type="checkbox" id="replay-invariance-check" checked>
-                  <span class="checkbox-label">Run 5-Permutation Order Invariance Verification</span>
-                </label>
-              </div>
-
-              <div class="btn-row">
+              <div class="replay-actions-row">
                 <button id="btn-run-replay" class="btn btn-primary">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                   Run Replay Simulation
                 </button>
                 <button id="btn-load-all-fixtures" class="btn btn-outline">
-                  Run All 6 Edge-Case Fixtures
+                  Run Full Battery (All 6 Fixtures)
                 </button>
               </div>
             </div>
@@ -372,6 +352,6 @@
     <div id="toast-container" class="toast-container"></div>
   </div>
 
-  <script src="/static/app.js?v=7"></script>
+  <script src="/static/app.js?v=8"></script>
 </body>
 </html>

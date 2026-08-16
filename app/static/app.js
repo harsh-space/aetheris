@@ -405,9 +405,8 @@ document.addEventListener("DOMContentLoaded", () => {
   btnRunReplay.addEventListener("click", async () => {
     try {
       const fixtureName = replayFixtureSelect.value;
-      const strategy = replayStrategySelect.value;
-      const shuffle = replayShuffleCheck.checked;
-      const verifyInvariance = replayInvarianceCheck.checked;
+      const strategyOpt = document.querySelector(".dropdown-option.active");
+      const activeStrategy = strategyOpt ? strategyOpt.getAttribute("data-value") : "source_priority";
 
       replayStatusBadge.textContent = "Simulating...";
       replayStatusBadge.className = "badge badge-purple";
@@ -417,9 +416,9 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fixture_name: fixtureName,
-          strategy: strategy,
-          shuffle: shuffle,
-          verify_invariance: verifyInvariance
+          strategy: activeStrategy,
+          shuffle: false,
+          verify_invariance: true
         })
       });
       const data = await resp.json();
