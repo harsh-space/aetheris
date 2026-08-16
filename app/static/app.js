@@ -476,10 +476,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (replayPersistToggle && persistModeHint) {
     replayPersistToggle.addEventListener("change", () => {
       if (replayPersistToggle.checked) {
-        persistModeHint.textContent = "Live mode — events recorded to audit ledger DB";
+        persistModeHint.textContent = "Write to database";
         persistModeHint.style.color = "var(--accent-teal)";
       } else {
-        persistModeHint.textContent = "Sandbox mode — no ledger writes";
+        persistModeHint.textContent = "Sandbox mode only";
         persistModeHint.style.color = "var(--text-dim)";
       }
     });
