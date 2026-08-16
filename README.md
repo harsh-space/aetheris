@@ -173,7 +173,7 @@ To maintain historical continuity under network jitter, Aetheris splits the hand
 
 1. **Idempotency Fingerprinting**
    Every telemetry event computes a deterministic SHA-256 fingerprint:
-   $$\text{Fingerprint} = \text{SHA256}(\text{sensor\_id} \,\|\, \text{timestamp} \,\|\, \text{source} \,\|\, \text{readings})$$
+   $$\text{Fingerprint} = \text{SHA-256}(\text{sensorID} \mathbin{\Vert} \text{timestamp} \mathbin{\Vert} \text{source} \mathbin{\Vert} \text{readings})$$
    Duplicate transmissions from network retries are filtered at the edge of the API, preventing state drift.
 
 2. **Ordered Chronological Re-indexing**
