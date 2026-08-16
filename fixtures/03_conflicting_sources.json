@@ -1,0 +1,26 @@
+[
+  {
+    "sensor_id": "WQ-S102",
+    "timestamp": "2024-06-15T14:00:00Z",
+    "readings": {"pH": 7.10, "turbidity": 3.0, "conductivity": 450.0, "temperature": 22.0},
+    "source": "field"
+  },
+  {
+    "sensor_id": "WQ-S102",
+    "timestamp": "2024-06-15T14:00:00Z",
+    "readings": {"pH": 7.35, "turbidity": 2.2, "conductivity": 420.0, "temperature": 21.8},
+    "source": "lab"
+  },
+  {
+    "sensor_id": "WQ-S102",
+    "timestamp": "2024-06-15T14:00:00Z",
+    "readings": {"pH": 7.05, "turbidity": 3.5, "conductivity": 470.0, "temperature": 22.5},
+    "source": "backup"
+  },
+  {
+    "sensor_id": "WQ-S102",
+    "timestamp": "2024-06-15T14:05:00Z",
+    "readings": {"pH": 7.38, "turbidity": 2.1, "conductivity": 418.0, "temperature": 21.9},
+    "source": "calibration"
+  }
+]
