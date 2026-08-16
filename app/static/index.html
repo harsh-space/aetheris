@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css?v=6">
+  <link rel="stylesheet" href="/static/style.css?v=7">
 </head>
 <body>
   <div class="app-layout">
@@ -25,13 +25,27 @@
           <span id="engine-status-text">Engine Online</span>
         </div>
 
-        <div class="control-group resolver-control" title="Select Conflict Resolution Strategy">
-          <label for="strategy-selector" class="control-label">Resolver:</label>
-          <select id="strategy-selector" class="select-input">
-            <option value="source_priority">Source Priority (Lab > Field > Backup)</option>
-            <option value="confidence_weighted">Confidence Weighted Fusion</option>
-            <option value="latest">Latest Timestamp Wins</option>
-          </select>
+        <div class="custom-dropdown resolver-dropdown" id="resolver-dropdown-container">
+          <button type="button" class="dropdown-trigger" id="dropdown-trigger-btn">
+            <span class="control-label">Resolver:</span>
+            <span class="dropdown-selected-text" id="dropdown-current-value">Source Priority (Lab > Field > Backup)</span>
+            <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          
+          <div class="custom-dropdown-menu hidden" id="custom-dropdown-menu">
+            <div class="dropdown-option active" data-value="source_priority">
+              <div class="option-title">Source Priority (Lab > Field > Backup)</div>
+              <div class="option-desc">Strict authority hierarchy: Lab (1.0) overrides Field (0.8) & Backup (0.5)</div>
+            </div>
+            <div class="dropdown-option" data-value="confidence_weighted">
+              <div class="option-title">Confidence Weighted Fusion</div>
+              <div class="option-desc">Bayesian weighted blending of concurrent measurements</div>
+            </div>
+            <div class="dropdown-option" data-value="latest">
+              <div class="option-title">Latest Timestamp Wins</div>
+              <div class="option-desc">Most recent event timestamp takes precedence</div>
+            </div>
+          </div>
         </div>
 
         <button id="btn-load-master" class="btn btn-primary" title="Load comprehensive dataset covering all 6 PRD scenarios">
@@ -358,6 +372,6 @@
     <div id="toast-container" class="toast-container"></div>
   </div>
 
-  <script src="/static/app.js?v=6"></script>
+  <script src="/static/app.js?v=7"></script>
 </body>
 </html>

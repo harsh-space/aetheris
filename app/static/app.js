@@ -234,22 +234,58 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Strategy change
-  strategySelector.addEventListener("change", async (e) => {
-    try {
-      const resp = await fetch("/config/strategy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ strategy: e.target.value })
-      });
-      if (resp.ok) {
-        showToast(`Resolver Strategy switched to <strong>${e.target.value}</strong>.`);
-        await refreshDashboard();
+  // Custom Rounded Dropdown Logic
+  const dropdownTriggerBtn = document.getElementById("dropdown-trigger-btn");
+  const customDropdownMenu = document.getElementById("custom-dropdown-menu");
+  const dropdownCurrentValue = document.getElementById("dropdown-current-value");
+  const dropdownOptions = document.querySelectorAll(".dropdown-option");
+
+  if (dropdownTriggerBtn && customDropdownMenu) {
+    dropdownTriggerBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = !customDropdownMenu.classList.contains("hidden");
+      if (isOpen) {
+        customDropdownMenu.classList.add("hidden");
+        dropdownTriggerBtn.classList.remove("open");
+      } else {
+        customDropdownMenu.classList.remove("hidden");
+        dropdownTriggerBtn.classList.add("open");
       }
-    } catch (err) {
-      console.error("Strategy update failed:", err);
-    }
-  });
+    });
+
+    dropdownOptions.forEach(opt => {
+      opt.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const val = opt.getAttribute("data-value");
+        const title = opt.querySelector(".option-title").textContent;
+        dropdownOptions.forEach(o => o.classList.remove("active"));
+        opt.classList.add("active");
+        dropdownCurrentValue.textContent = title;
+        customDropdownMenu.classList.add("hidden");
+        dropdownTriggerBtn.classList.remove("open");
+
+        try {
+          const resp = await fetch("/config/strategy", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ strategy: val })
+          });
+          if (resp.ok) {
+            showToast(`Resolver strategy set to <strong>${title}</strong>.`);
+            await refreshDashboard();
+          }
+        } catch (err) {
+          console.error("Strategy update failed:", err);
+        }
+      });
+    });
+
+    // Close dropdown on click outside
+    document.addEventListener("click", () => {
+      customDropdownMenu.classList.add("hidden");
+      dropdownTriggerBtn.classList.remove("open");
+    });
+  }
 
   // Reset Engine
   btnResetEngine.addEventListener("click", async () => {
