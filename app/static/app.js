@@ -249,7 +249,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const dropdownTriggerBtn = document.getElementById("dropdown-trigger-btn");
   const customDropdownMenu = document.getElementById("custom-dropdown-menu");
   const dropdownCurrentValue = document.getElementById("dropdown-current-value");
-  const dropdownOptions = document.querySelectorAll(".dropdown-option");
+  const dropdownOptions = document.querySelectorAll("#custom-dropdown-menu .dropdown-option");
 
   if (dropdownTriggerBtn && customDropdownMenu) {
     dropdownTriggerBtn.addEventListener("click", (e) => {
@@ -454,9 +454,8 @@ document.addEventListener("DOMContentLoaded", () => {
   btnRunReplay.addEventListener("click", async () => {
     try {
       const fixtureName = selectedFixtureValue;
-      // Read strategy specifically from the resolver dropdown, not generic querySelector
-      const resolverActiveOpt = document.querySelector("#custom-dropdown-menu .dropdown-option.active");
-      const activeStrategy = resolverActiveOpt ? resolverActiveOpt.getAttribute("data-value") : "source_priority";
+      const strategyOpt = document.querySelector("#custom-dropdown-menu .dropdown-option.active");
+      const activeStrategy = strategyOpt ? strategyOpt.getAttribute("data-value") : "source_priority";
 
       replayStatusBadge.textContent = "Simulating...";
       replayStatusBadge.className = "badge badge-purple";
