@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.classList.add("active");
       const targetId = btn.getAttribute("data-tab");
       document.getElementById(targetId).classList.add("active");
-      
+
       if (targetId === "tab-audit") loadAuditTrail();
       if (targetId === "tab-spatial") loadSpatialData();
     });
@@ -374,8 +374,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  btnVerifyAudit.addEventListener("click", handleVerifyAudit);
-  btnVerifyAuditPane.addEventListener("click", handleVerifyAudit);
+  if (btnVerifyAudit) btnVerifyAudit.addEventListener("click", handleVerifyAudit);
+  if (btnVerifyAuditPane) btnVerifyAuditPane.addEventListener("click", handleVerifyAudit);
 
   // Send Single Event
   btnSendEvent.addEventListener("click", async () => {
@@ -829,9 +829,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
           <div class="cluster-nodes-list">
             ${c.sensors.map(sId => {
-              const isSensorAnom = currentSensors[sId] && currentSensors[sId].is_anomalous;
-              return `<span class="mono-badge" style="border-color:${isSensorAnom ? 'var(--accent-rose)' : 'var(--border-color)'}; color:${isSensorAnom ? 'var(--accent-rose)' : 'var(--text-main)'}; cursor:pointer;" onclick="document.querySelector('[data-tab=tab-fleet]').click(); setTimeout(() => openSensorDetail('${sId}'), 100);">${sId}</span>`;
-            }).join("")}
+        const isSensorAnom = currentSensors[sId] && currentSensors[sId].is_anomalous;
+        return `<span class="mono-badge" style="border-color:${isSensorAnom ? 'var(--accent-rose)' : 'var(--border-color)'}; color:${isSensorAnom ? 'var(--accent-rose)' : 'var(--text-main)'}; cursor:pointer;" onclick="document.querySelector('[data-tab=tab-fleet]').click(); setTimeout(() => openSensorDetail('${sId}'), 100);">${sId}</span>`;
+      }).join("")}
           </div>
         </div>
       `;
