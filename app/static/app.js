@@ -1,6 +1,17 @@
 // Aetheris IoT Telemetry & Anomaly Resolution Client Application
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Floating sticky navbar — apply glass background on scroll
+  const stickyNav = document.querySelector(".sticky-nav-container");
+  if (stickyNav) {
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > 20) {
+        stickyNav.classList.add("scrolled");
+      } else {
+        stickyNav.classList.remove("scrolled");
+      }
+    }, { passive: true });
+  }
   // State variables
   let currentSensors = {};
   let selectedSensorId = null;
