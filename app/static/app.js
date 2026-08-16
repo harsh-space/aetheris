@@ -91,50 +91,66 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Presets mapping
-  const PRESETS = {
-    normal: {
-      sensor_id: "WQ-S123",
-      timestamp: new Date().toISOString(),
-      readings: { pH: 7.35, turbidity: 2.4, conductivity: 425.0, temperature: 21.2 },
-      source: "field"
-    },
-    dup: {
-      sensor_id: "WQ-S123",
-      timestamp: "2024-06-15T10:30:00Z",
-      readings: { pH: 6.8, turbidity: 2.1, conductivity: 450.0, temperature: 22.5 },
-      source: "field"
-    },
-    ooo: {
-      sensor_id: "WQ-S101",
-      timestamp: "2024-06-15T11:45:00Z",
-      readings: { pH: 7.20, turbidity: 1.9, conductivity: 410.0, temperature: 19.5 },
-      source: "field"
-    },
-    lab_override: {
-      sensor_id: "WQ-S102",
-      timestamp: "2024-06-15T14:00:00Z",
-      readings: { pH: 7.45, turbidity: 1.8, conductivity: 415.0, temperature: 21.0 },
-      source: "lab"
-    },
-    partial: {
-      sensor_id: "WQ-S103",
-      timestamp: new Date().toISOString(),
-      readings: { pH: 7.42 },
-      source: "field"
-    },
-    thermal_shock: {
-      sensor_id: "WQ-IND01",
-      timestamp: new Date().toISOString(),
-      readings: { pH: 6.2, turbidity: 3.5, conductivity: 490.0, temperature: 28.5 },
-      source: "field"
-    },
-    acid_spike: {
-      sensor_id: "WQ-S101",
-      timestamp: new Date().toISOString(),
-      readings: { pH: 3.8, turbidity: 95.0, conductivity: 1350.0, temperature: 22.0 },
-      source: "field"
-    }
-  };
+  // NOTE: timestamps are computed at click-time via getPreset() so they are always fresh.
+  function getPreset(key) {
+    const now = new Date();
+    const nowISO = now.toISOString();
+    // 10 minutes in the past — used for out-of-order detection
+    const tenMinAgo = new Date(now.getTime() - 10 * 60 * 1000).toISOString();
+    // Fixed anchor used for dup preset: same value every click so 2nd send = real duplicate
+    // We use a session-scoped fixed ISO so two clicks in a row collide.
+    const PRESETS = {
+      normal: {
+        sensor_id: "WQ-S123",
+        timestamp: nowISO,
+        readings: { pH: 7.35, turbidity: 2.4, conductivity: 425.0, temperature: 21.2 },
+        source: "field"
+      },
+      // DUP: fixed timestamp so clicking Send twice sends identical events → deduplication fires
+      dup: {
+        sensor_id: "WQ-S123",
+        timestamp: "2026-01-01T00:00:00.000Z",
+        readings: { pH: 6.8, turbidity: 2.1, conductivity: 450.0, temperature: 22.5 },
+        source: "field"
+      },
+      // OOO: timestamp 10 min in the past → arrives after a more recent reading → triggers OUT_OF_ORDER
+      ooo: {
+        sensor_id: "WQ-S101",
+        timestamp: tenMinAgo,
+        readings: { pH: 7.20, turbidity: 1.9, conductivity: 410.0, temperature: 19.5 },
+        source: "field"
+      },
+      // LAB OVERRIDE: same sensor WQ-S101, live timestamp, lab source
+      // If a field reading for WQ-S101 already exists, the resolver will prefer lab source.
+      lab_override: {
+        sensor_id: "WQ-S101",
+        timestamp: nowISO,
+        readings: { pH: 7.55, turbidity: 1.6, conductivity: 412.0, temperature: 21.3 },
+        source: "lab"
+      },
+      partial: {
+        sensor_id: "WQ-S103",
+        timestamp: nowISO,
+        readings: { pH: 7.42 },
+        source: "field"
+      },
+      // THERMAL SHOCK: extreme temp + pH drop → triggers THERMAL_PH_COUPLING on 2nd send
+      // (First send establishes baseline; second send within 5 min triggers coupling detection)
+      thermal_shock: {
+        sensor_id: "WQ-IND01",
+        timestamp: nowISO,
+        readings: { pH: 6.1, turbidity: 3.8, conductivity: 495.0, temperature: 29.0 },
+        source: "field"
+      },
+      acid_spike: {
+        sensor_id: "WQ-S101",
+        timestamp: nowISO,
+        readings: { pH: 3.8, turbidity: 95.0, conductivity: 1350.0, temperature: 22.0 },
+        source: "field"
+      }
+    };
+    return PRESETS[key] || null;
+  }
 
   // Tab Navigation
   tabBtns.forEach(btn => {
@@ -167,12 +183,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Preset buttons
+  // Preset buttons — timestamps are resolved fresh at click time
   document.querySelectorAll(".btn-chip").forEach(chip => {
     chip.addEventListener("click", () => {
       const presetKey = chip.getAttribute("data-preset");
-      if (PRESETS[presetKey]) {
-        eventPayloadEditor.value = JSON.stringify(PRESETS[presetKey], null, 2);
+      const preset = getPreset(presetKey);
+      if (preset) {
+        eventPayloadEditor.value = JSON.stringify(preset, null, 2);
+        // Visual feedback: briefly highlight the active chip
+        document.querySelectorAll(".btn-chip").forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
       }
     });
   });
