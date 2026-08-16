@@ -284,6 +284,44 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("click", () => {
       customDropdownMenu.classList.add("hidden");
       dropdownTriggerBtn.classList.remove("open");
+      if (fixtureDropdownMenu && fixtureDropdownTrigger) {
+        fixtureDropdownMenu.classList.add("hidden");
+        fixtureDropdownTrigger.classList.remove("open");
+      }
+    });
+  }
+
+  // Fixture Custom Dropdown Logic
+  const fixtureDropdownTrigger = document.getElementById("fixture-dropdown-trigger");
+  const fixtureDropdownMenu = document.getElementById("fixture-dropdown-menu");
+  const fixtureCurrentValue = document.getElementById("fixture-current-value");
+  const fixtureOptions = document.querySelectorAll("#fixture-dropdown-menu .dropdown-option");
+  let selectedFixtureValue = "00_master_fleet_simulation.json";
+
+  if (fixtureDropdownTrigger && fixtureDropdownMenu) {
+    fixtureDropdownTrigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = !fixtureDropdownMenu.classList.contains("hidden");
+      if (isOpen) {
+        fixtureDropdownMenu.classList.add("hidden");
+        fixtureDropdownTrigger.classList.remove("open");
+      } else {
+        fixtureDropdownMenu.classList.remove("hidden");
+        fixtureDropdownTrigger.classList.add("open");
+      }
+    });
+
+    fixtureOptions.forEach(opt => {
+      opt.addEventListener("click", (e) => {
+        e.stopPropagation();
+        selectedFixtureValue = opt.getAttribute("data-value");
+        const title = opt.querySelector(".option-title").textContent;
+        fixtureOptions.forEach(o => o.classList.remove("active"));
+        opt.classList.add("active");
+        fixtureCurrentValue.textContent = title;
+        fixtureDropdownMenu.classList.add("hidden");
+        fixtureDropdownTrigger.classList.remove("open");
+      });
     });
   }
 
@@ -404,7 +442,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Run Replay Simulation
   btnRunReplay.addEventListener("click", async () => {
     try {
-      const fixtureName = replayFixtureSelect.value;
+      const fixtureName = selectedFixtureValue;
       const strategyOpt = document.querySelector(".dropdown-option.active");
       const activeStrategy = strategyOpt ? strategyOpt.getAttribute("data-value") : "source_priority";
 

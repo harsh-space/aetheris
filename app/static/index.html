@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css?v=8">
+  <link rel="stylesheet" href="/static/style.css?v=9">
 </head>
 <body>
   <div class="app-layout">
@@ -200,17 +200,46 @@
               <span class="badge badge-purple">Mathematical Invariance</span>
             </div>
             <div class="card-body">
-              <div class="form-group">
-                <label for="replay-fixture-select">Select Edge-Case Scenario:</label>
-                <select id="replay-fixture-select" class="select-input-styled">
-                  <option value="00_master_fleet_simulation.json">Master Fleet Simulation (All 6 PRD Scenarios)</option>
-                  <option value="01_duplicate_packet_storm.json">01. Duplicate Packet Storm (Idempotency)</option>
-                  <option value="02_out_of_order_stream.json">02. Out-of-Order Stream (Bi-Temporal Ordering)</option>
-                  <option value="03_conflicting_sources.json">03. Conflicting Sources (Identity Resolution)</option>
-                  <option value="04_partial_reading_merges.json">04. Partial Reading Merges (Metric Fusion)</option>
-                  <option value="05_drift_vs_spike_correlation.json">05. Sensor Drift vs Contamination Plume</option>
-                  <option value="06_midnight_boundary_transition.json">06. Midnight UTC Transition Boundary</option>
-                </select>
+              <div class="form-group" style="margin-bottom: 22px;">
+                <label class="control-label" style="margin-bottom: 8px;">Select Edge-Case Scenario:</label>
+                
+                <div class="custom-dropdown fixture-dropdown" id="fixture-dropdown-container">
+                  <button type="button" class="dropdown-trigger full-width" id="fixture-dropdown-trigger">
+                    <span class="dropdown-selected-text" id="fixture-current-value">Master Fleet Simulation (All 6 PRD Scenarios)</span>
+                    <svg class="dropdown-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </button>
+                  
+                  <div class="custom-dropdown-menu full-width hidden" id="fixture-dropdown-menu">
+                    <div class="dropdown-option active" data-value="00_master_fleet_simulation.json">
+                      <div class="option-title">Master Fleet Simulation (All 6 PRD Scenarios)</div>
+                      <div class="option-desc">Complete 8-sensor multi-catchment simulation testing all features concurrently</div>
+                    </div>
+                    <div class="dropdown-option" data-value="01_duplicate_packet_storm.json">
+                      <div class="option-title">01. Duplicate Packet Storm (Idempotency)</div>
+                      <div class="option-desc">Cryptographic SHA-256 deduplication rejecting redundant packet bursts</div>
+                    </div>
+                    <div class="dropdown-option" data-value="02_out_of_order_stream.json">
+                      <div class="option-title">02. Out-of-Order Stream (Bi-Temporal Ordering)</div>
+                      <div class="option-desc">Binary search insertion & historical timeline state reconstruction</div>
+                    </div>
+                    <div class="dropdown-option" data-value="03_conflicting_sources.json">
+                      <div class="option-title">03. Conflicting Sources (Identity Resolution)</div>
+                      <div class="option-desc">Resolution strategies between Lab, Field, and Backup IoT readings</div>
+                    </div>
+                    <div class="dropdown-option" data-value="04_partial_reading_merges.json">
+                      <div class="option-title">04. Partial Reading Merges (Metric Fusion)</div>
+                      <div class="option-desc">Merging incomplete sensor payloads without overwriting prior metrics</div>
+                    </div>
+                    <div class="dropdown-option" data-value="05_drift_vs_spike_correlation.json">
+                      <div class="option-title">05. Sensor Drift vs Contamination Plume</div>
+                      <div class="option-desc">Distinguishing single electrode fouling from multi-sensor toxic spills</div>
+                    </div>
+                    <div class="dropdown-option" data-value="06_midnight_boundary_transition.json">
+                      <div class="option-title">06. Midnight UTC Transition Boundary</div>
+                      <div class="option-desc">Continuity & chronological sequencing across 23:59:59Z -> 00:00:01Z</div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div class="replay-actions-row">
@@ -352,6 +381,6 @@
     <div id="toast-container" class="toast-container"></div>
   </div>
 
-  <script src="/static/app.js?v=8"></script>
+  <script src="/static/app.js?v=9"></script>
 </body>
 </html>
