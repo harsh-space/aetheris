@@ -63,10 +63,11 @@ python scripts/benchmark.py
 
 | Fixture File | Scenario Covered | Key Verification |
 | :--- | :--- | :--- |
+| `00_master_fleet_simulation.json` | **All 6 PRD scenarios combined** across 8 sensors, 3 catchment basins | Full end-to-end integration test: deduplication, OOO, conflicts, partial merges, drift, plume, midnight UTC |
 | `01_duplicate_packet_storm.json` | 5x identical packet storm with network retries | Idempotency; zero state drift; version incremented only on unique events |
 | `02_out_of_order_stream.json` | Jittered and delayed telemetry arrival | Binary search re-indexing; bi-temporal state reconstruction |
 | `03_conflicting_sources.json` | Simultaneous competing readings (`field` vs `lab` vs `backup`) | Source priority overrides & confidence-weighted fusion |
-| `04_partial_reading_merges.json` | Fragmented packets (pH only $\to$ turbidity only $\to$ conductivity) | Lossless partial metric fusion |
+| `04_partial_reading_merges.json` | Fragmented packets (pH only → turbidity only → conductivity) | Lossless partial metric fusion |
 | `05_drift_vs_spike_correlation.json` | CUSUM slow electrode drift vs dual-sensor chemical spike | Spatial topology corroboration & systemic plume alerts |
 | `06_midnight_boundary_transition.json` | Telemetry straddling UTC midnight ($23:59:45\text{Z} \to 00:00:15\text{Z}$) | Temporal sequence continuity across date boundaries |
 
@@ -85,9 +86,26 @@ python scripts/benchmark.py
 | `GET` | `/audit` | Query cryptographic audit trail records |
 | `POST` | `/verify-integrity` | Verify full SHA-256 hash chain from genesis block |
 | `GET` | `/analytics/correlations` | Get multi-sensor spatial cluster health & plume alerts |
-| `POST` | `/config/strategy` | Switch active conflict resolver strategy |
+| `POST` | `/config/strategy` | Switch active conflict resolver strategy (`source_priority` / `confidence_weighted` / `latest`) |
 | `POST` | `/reset` | Clear all telemetry caches and audit records |
-| `GET` | `/export/csv` | Download fleet states as CSV |
+| `GET` | `/export/csv` | Download **full historical telemetry audit log** (all events, timestamps, anomaly scores, SHA-256 hashes) as CSV |
+| `POST` | `/demo/load-master-dataset` | Load the master 8-sensor fleet fixture in one click for live demonstration |
+| `POST` | `/demo/generate-stream-tick` | Generate a single synthetic live telemetry tick for the fleet simulator |
+
+---
+
+## Dashboard Features
+
+The interactive dashboard at `http://127.0.0.1:8000` includes:
+
+- **Fleet Live Monitor** — real-time sensor cards with HTML5 canvas sparklines, live metric gauges, and cluster filter pills
+- **Bi-Temporal Scrubber** — point-in-time historical state reconstruction slider per sensor node
+- **Temporal Replay Studio** — run any edge-case fixture with automated 5-permutation deterministic invariance verification
+- **Live Packet Injector** — POST arbitrary telemetry JSON with quick-preset templates (thermal shock, acid spill, lab override, etc.)
+- **Spatial Corroboration Map** — catchment basin cluster cards distinguishing sensor defects from contamination plumes
+- **Cryptographic Audit Ledger** — full SHA-256 blockchain table with one-click chain integrity verification
+- **Live Simulator** — auto-generates synthetic telemetry ticks every 1.2 seconds across the fleet
+- **Master Dataset Loader** — populates all 8 sensors with comprehensive PRD test data in one click
 
 ---
 
