@@ -97,23 +97,31 @@ body {
 /* Floating Sticky Control Bar */
 .sticky-nav-container {
   position: sticky;
-  top: 10px;
+  top: 0;
   z-index: 200;
   display: flex;
   justify-content: center;
-  padding: 0 24px;
+  padding: 10px 24px;
   background: transparent;
+  transition: background 0.35s ease, box-shadow 0.35s ease;
   pointer-events: none;
+}
+
+/* When scrolled: pure backdrop blur, no color overlay - matches any bg */
+.sticky-nav-container.scrolled {
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  /* Subtle bottom separator only */
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .sticky-nav-container .pill-nav-bar {
   pointer-events: all;
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: box-shadow 0.3s ease;
 }
 
 .sticky-nav-container.scrolled .pill-nav-bar {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 .brand-title {
