@@ -7,25 +7,19 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css?v=3">
+  <link rel="stylesheet" href="/static/style.css?v=5">
 </head>
 <body>
   <div class="app-layout">
-    <!-- Top Navigation Bar -->
-    <header class="top-nav">
-      <div class="nav-brand">
-        <div class="brand-logo">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
-          </svg>
-        </div>
-        <div class="brand-text">
-          <span class="brand-title">Aetheris<span class="brand-accent">.ai</span></span>
-          <span class="brand-subtitle">IoT Anomaly Resolution & Temporal Replay Engine</span>
-        </div>
+    <!-- Top Centered Brand Header -->
+    <header class="main-header">
+      <div class="brand-center">
+        <h1 class="brand-title">AETHERIS</h1>
+        <p class="brand-subtitle">IoT • Anomaly Resolution • Temporal Replay Engine</p>
       </div>
 
-      <div class="nav-controls">
+      <!-- Secondary Floating Pill Control Bar -->
+      <div class="pill-nav-bar">
         <div class="status-pill status-healthy">
           <span class="pulse-dot"></span>
           <span id="engine-status-text">Engine Online</span>
@@ -364,6 +358,6 @@
     <div id="toast-container" class="toast-container"></div>
   </div>
 
-  <script src="/static/app.js?v=3"></script>
+  <script src="/static/app.js?v=5"></script>
 </body>
 </html>
