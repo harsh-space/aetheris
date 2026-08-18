@@ -363,6 +363,7 @@ document.addEventListener("DOMContentLoaded", () => {
         await fetch("/reset", { method: "POST" });
         showToast("System state and audit ledger cleared.");
         await refreshDashboard();
+        await loadAuditTrail();
       } catch (err) {
         console.error("Reset failed:", err);
       }
