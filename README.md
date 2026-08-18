@@ -5,16 +5,6 @@
 
 ---
 
-## Demo
-
-<div align="center">
-  <video src="https://github.com/user-attachments/assets/c6b8bf09-07e9-4d9a-96a4-75b85c07b978" width="900" controls></video>
-  <br/>
-  <em>Live demo of Aetheris — real-time sensor telemetry, anomaly resolution, and cryptographic audit ledger in action</em>
-</div>
-
----
-
 ## Executive Summary
 
 Monitoring river basins and agricultural runoff requires distributing low-power water quality sensors across wide geographic regions. In these deployments, unstable network connections introduce severe packet jitter, duplication packet storms, out-of-order telemetry arrival, and fragmented readings.
@@ -51,6 +41,16 @@ Existing systems often rely on cloud-dependent databases or lack the analytical 
 - **CUSUM Electrode Drift Detection** – Standardized residual tracking to detect slow sensor degradation.
 - **Spatial topology corroboration** – Cross-checks anomalies across local catchment basins to differentiate isolated hardware faults from systemic pollution plumes.
 - **SHA-256 Cryptographic Audit Chain** – Every state change is hashed and linked to the previous block, creating a verifiable audit trail.
+
+---
+
+## Demo
+
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/c6b8bf09-07e9-4d9a-96a4-75b85c07b978" width="900" controls></video>
+  <br/>
+  <em>Live demo of Aetheris — real-time sensor telemetry, anomaly resolution, and cryptographic audit ledger in action</em>
+</div>
 
 ---
 
