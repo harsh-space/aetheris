@@ -1,7 +1,17 @@
-# Aetheris
+# Aetheris ![Hackathon Project](https://img.shields.io/badge/type-Hackathon%20Project-orange)
 ## A Real-Time IoT Telemetry & Anomaly Resolution Engine with Bi-Temporal State Reconstruction and Cryptographically Chained Audit Ledgers
 
 > Simple dashboards display what sensors say. Aetheris verifies that what they say is authentic, resolves contradictions from competing sources, and mathematically proves the integrity of the historical record.
+
+---
+
+## Demo
+
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/c6b8bf09-07e9-4d9a-96a4-75b85c07b978" width="900" controls></video>
+  <br/>
+  <em>Live demo of Aetheris — real-time sensor telemetry, anomaly resolution, and cryptographic audit ledger in action</em>
+</div>
 
 ---
 
@@ -382,7 +392,3 @@ Aetheris demonstrates how complex bi-temporal synchronization and multivariate a
 ### Limitations
 - **Local SQLite Write-Through**: Designed for small-to-medium catchment fleets. Extremely large industrial configurations (10,000+ events/sec) will require migrating the write-through layer to PostgreSQL or a specialized timeseries database.
 - **Mahalanobis Matrix Initialization**: Requires an initial 100-event clean baseline history to construct the covariance matrix $\boldsymbol{\Sigma}$ before high-confidence multivariate outlier scoring becomes active.
-
----
-
-For an in-depth breakdown of how this project satisfies the **Six Dimensions of Engineering Evidence**, see [`EVIDENCE.md`](./EVIDENCE.md).
